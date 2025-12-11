@@ -1,0 +1,10 @@
+{
+  "hello": "مرحبا",
+  "arabic": "العربية",
+  "english": "الإنجليزية",
+  "light": "فاتح",
+  "dark": "غامق",
+  "system": "النظام",
+  "confirmButton": "تأكيد",
+  "cancelButton": "إلغاء"
+}

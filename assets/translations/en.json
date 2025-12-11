@@ -1,0 +1,10 @@
+{
+  "hello": "Hello",
+  "arabic": "Arabic",
+  "english": "English",
+  "light": "Light",
+  "dark": "Dark",
+  "system": "System",
+  "confirmButton": "Confirm",
+  "cancelButton": "Cancel"
+}
