@@ -25,7 +25,7 @@ Future<void> firstInit() async {
   }
 
   try {
-    await LocalNotificationsService().init();
+    await LocalNotificationsService.instance.init();
   } catch (e) {
     log('Error when init LocalNotificationsService: $e');
   }
