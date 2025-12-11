@@ -1,19 +1,11 @@
+import 'dart:developer';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:logger/logger.dart';
 
 // Base class for configuring Dio with interceptors, logging, and timeouts
 class DioClient {
   late final Dio _dio;
-  final Logger _logger = Logger(
-    printer: PrettyPrinter(
-      methodCount: 0,
-      errorMethodCount: 5,
-      lineLength: 50,
-      colors: true,
-      printEmojis: true,
-    ),
-  );
 
   DioClient({required String baseUrl}) {
     _dio = Dio(
@@ -34,27 +26,27 @@ class DioClient {
       InterceptorsWrapper(
         onRequest: (options, handler) {
           if (kDebugMode) {
-            _logger.i("REQUEST[${options.method}] => PATH: ${options.path}");
-            _logger.i("Headers: ${options.headers}");
-            _logger.i("Data: ${options.data}");
+            log("REQUEST[${options.method}] => PATH: ${options.path}");
+            log("Headers: ${options.headers}");
+            log("Data: ${options.data}");
           }
           return handler.next(options);
         },
         onResponse: (response, handler) {
           if (kDebugMode) {
-            _logger.i(
+            log(
               "RESPONSE[${response.statusCode}] => PATH: ${response.requestOptions.path}",
             );
-            _logger.i("Data: ${response.data}");
+            log("Data: ${response.data}");
           }
           return handler.next(response);
         },
         onError: (DioException e, handler) {
           if (kDebugMode) {
-            _logger.e(
+            log(
               "ERROR[${e.response?.statusCode}] => PATH: ${e.requestOptions.path}",
             );
-            _logger.e("Message: ${e.message}");
+            log("Message: ${e.message}");
           }
           return handler.next(e);
         },

@@ -1,7 +1,6 @@
 import 'dart:developer';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import '../utils/logger.dart';
 
 class LocalNotificationsService {
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
@@ -29,7 +28,7 @@ class LocalNotificationsService {
       initializationSettings,
 
       onDidReceiveNotificationResponse: (NotificationResponse response) async {
-        AppLogger.i("Notification Clicked: ${response.payload}");
+        log("Notification Clicked: ${response.payload}");
         // Handle notification tap logic here
       },
     );

@@ -1,5 +1,6 @@
+import 'dart:developer';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
-import '../utils/logger.dart';
 
 class RemoteNotificationsService {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
@@ -16,27 +17,25 @@ class RemoteNotificationsService {
     );
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      AppLogger.i('User granted permission');
+      log('User granted permission');
     } else if (settings.authorizationStatus ==
         AuthorizationStatus.provisional) {
-      AppLogger.i('User granted provisional permission');
+      log('User granted provisional permission');
     } else {
-      AppLogger.w('User declined or has not accepted permission');
+      log('User declined or has not accepted permission');
     }
 
     // Get FCM Token
     String? token = await _firebaseMessaging.getToken();
-    AppLogger.i("FCM Token: $token");
+    log("FCM Token: $token");
 
     // Listen to foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      AppLogger.i('Got a message whilst in the foreground!');
-      AppLogger.i('Message data: ${message.data}');
+      log('Got a message whilst in the foreground!');
+      log('Message data: ${message.data}');
 
       if (message.notification != null) {
-        AppLogger.i(
-          'Message also contained a notification: ${message.notification}',
-        );
+        log('Message also contained a notification: ${message.notification}');
       }
     });
   }
