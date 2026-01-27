@@ -1,291 +1,259 @@
-import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
-
-import 'package:android_intent_plus/android_intent.dart';
-import 'package:flutter/services.dart';
+import 'dart:math' as m;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_native_timezone_latest/flutter_native_timezone_latest.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../helper/deep_link_helper.dart';
+
 class LocalNotificationsService {
-  // Singleton pattern
   static final LocalNotificationsService instance =
       LocalNotificationsService._internal();
   factory LocalNotificationsService() => instance;
   LocalNotificationsService._internal();
 
-  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
+  final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
-  static const MethodChannel _alarmCheckChannel = MethodChannel(
-    'flutter_alarm_check',
-  );
+  bool _initialized = false;
+  bool _enabled = true;
 
-  bool _isInitialized = false;
-
-  /// 1. Initialize FlutterLocalNotificationsPlugin with Android and iOS settings.
-  /// 3. Initialize TimeZone correctly.
   Future<void> init() async {
-    if (_isInitialized) return;
+    if (_initialized) return;
 
     try {
-      // Initialize TimeZone
       tz.initializeTimeZones();
-      final String timeZoneName =
-          await FlutterNativeTimezoneLatest.getLocalTimezone();
-      tz.setLocalLocation(tz.getLocation(timeZoneName));
-      log('✅ Timezone initialized: $timeZoneName');
+      final zone = await FlutterNativeTimezoneLatest.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(zone));
+      log('✅ Timezone set: $zone');
 
-      // Android Settings
-      const AndroidInitializationSettings androidSettings =
-          AndroidInitializationSettings('@mipmap/ic_launcher');
-
-      // iOS Settings - Dont request permissions immediately
-      const DarwinInitializationSettings iosSettings =
-          DarwinInitializationSettings(
-            requestAlertPermission: false,
-            requestBadgePermission: false,
-            requestSoundPermission: false,
-          );
-
-      final InitializationSettings settings = InitializationSettings(
-        android: androidSettings,
-        iOS: iosSettings,
+      const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const ios = DarwinInitializationSettings(
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: true,
       );
 
-      // 5. Handle notification taps
-      await _flutterLocalNotificationsPlugin.initialize(
-        settings,
-        onDidReceiveNotificationResponse: (NotificationResponse response) {
-          log('🔔 Notification tapped: ${response.payload}');
-          _handleNotificationTap(response);
-        },
-      );
-
-      _isInitialized = true;
-      log('✅ LocalNotificationsService initialized');
-
-      // 2. Request all necessary permissions
-      await requestPermissions();
-    } catch (e, stack) {
-      log(
-        '❌ Error initializing LocalNotificationsService',
-        error: e,
-        stackTrace: stack,
-      );
-    }
-  }
-
-  /// 2. Request permissions: Android (POST_NOTIFICATIONS) & iOS (alert, badge, sound)
-  Future<void> requestPermissions() async {
-    if (Platform.isAndroid) {
-      final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
-          _flutterLocalNotificationsPlugin
-              .resolvePlatformSpecificImplementation<
-                AndroidFlutterLocalNotificationsPlugin
-              >();
-
-      // Android 13+ Notification Permission
-      final bool? grantedArgs = await androidImplementation
-          ?.requestNotificationsPermission();
-      log('✅ Android notification permissions: $grantedArgs');
-    } else if (Platform.isIOS) {
-      final IOSFlutterLocalNotificationsPlugin? iosImplementation =
-          _flutterLocalNotificationsPlugin
-              .resolvePlatformSpecificImplementation<
-                IOSFlutterLocalNotificationsPlugin
-              >();
-
-      await iosImplementation?.requestPermissions(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
-    }
-  }
-
-  /// 6. Ensure Android 12+ Exact Alarms are checked using MethodChannel
-  Future<bool> _canScheduleExactAlarms() async {
-    if (!Platform.isAndroid) return true;
-    try {
-      // Check native capability via custom channel
-      final bool? canSchedule = await _alarmCheckChannel.invokeMethod<bool>(
-        'canScheduleExactAlarms',
-      );
-      log('⏰ MethodChannel check canScheduleExactAlarms: $canSchedule');
-
-      // If the channel returns null, it might not be implemented, proceed with caution or return false
-      return canSchedule ?? false;
-    } on PlatformException catch (e) {
-      log('❌ PlatformException checking exact alarms: ${e.message}');
-      // If method not found, assume false to trigger fallback or settings
-      return false;
-    } catch (e) {
-      log('❌ Error checking exact alarms: $e');
-      return false;
-    }
-  }
-
-  /// 7. Open Android settings if Exact Alarm not permitted
-  Future<void> _openExactAlarmSettings() async {
-    if (Platform.isAndroid) {
-      try {
-        log('⚠️ Opening Exact Alarm settings...');
-        final intent = AndroidIntent(
-          action: 'android.settings.REQUEST_SCHEDULE_EXACT_ALARM',
-        );
-        await intent.launch();
-      } catch (e) {
-        log('❌ Error opening settings: $e');
-      }
-    }
-  }
-
-  NotificationDetails _getPlatformChannelSpecifics() {
-    return const NotificationDetails(
-      android: AndroidNotificationDetails(
-        'default_channel_id',
-        'Default Channel',
-        channelDescription: 'Default channel for app notifications',
-        importance: Importance.max,
-        priority: Priority.high,
-        icon: '@mipmap/ic_launcher',
-      ),
-      iOS: DarwinNotificationDetails(),
-    );
-  }
-
-  /// 4. showNotification
-  Future<void> showNotification({
-    required String title,
-    required String body,
-    String? payload,
-  }) async {
-    try {
-      await _flutterLocalNotificationsPlugin.show(
-        DateTime.now().millisecond,
-        title,
-        body,
-        _getPlatformChannelSpecifics(),
-        payload: payload,
-      );
-      log('📤 Notification shown: $title');
-    } catch (e) {
-      log('❌ Error showing notification: $e');
-    }
-  }
-
-  /// 4. scheduleNotification
-  /// 8. Fallback to inexact scheduling
-  Future<void> scheduleNotification({
-    required String title,
-    required String body,
-    String? payload,
-    required Duration delay,
-  }) async {
-    try {
-      AndroidScheduleMode scheduleMode =
-          AndroidScheduleMode.exactAllowWhileIdle;
-
-      // Check Exact Alarm for Android
-      if (Platform.isAndroid) {
-        final canExact = await _canScheduleExactAlarms();
-        if (!canExact) {
+      await _plugin.initialize(
+        settings: const InitializationSettings(android: android, iOS: ios),
+        onDidReceiveNotificationResponse: (response) async {
           log(
-            '⚠️ Exact alarms not allowed. Opening settings and falling back to inexact.',
+            '🧭 Notification Tap Detected (Foreground) with Payload: ${response.payload}',
           );
-          await _openExactAlarmSettings();
-          // 8. Ensure fallback
-          scheduleMode = AndroidScheduleMode.inexactAllowWhileIdle;
-        }
-      }
-
-      final scheduledDate = tz.TZDateTime.now(tz.local).add(delay);
-
-      await _flutterLocalNotificationsPlugin.zonedSchedule(
-        DateTime.now().millisecond,
-        title,
-        body,
-        scheduledDate,
-        _getPlatformChannelSpecifics(),
-        androidScheduleMode: scheduleMode,
-        payload: payload,
+          await _handleLocalNotification(response);
+        },
+        onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
       );
-      log('📅 Notification scheduled for $scheduledDate (Mode: $scheduleMode)');
-    } on PlatformException catch (e) {
-      log('❌ PlatformException scheduling: ${e.message}');
-      // 9. Handle PlatformException - Retry with inexact if failed due to exact alarm
-      if (Platform.isAndroid &&
-          (e.code == 'SecurityException' ||
-              e.message?.contains('SecurityException') == true)) {
-        log('🔄 Retrying with inexact scheduling due to SecurityException...');
-        try {
-          await _flutterLocalNotificationsPlugin.zonedSchedule(
-            DateTime.now().millisecond,
-            title,
-            body,
-            tz.TZDateTime.now(tz.local).add(delay),
-            _getPlatformChannelSpecifics(),
-            androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-
-            payload: payload,
-          );
-          log('✅ Retry successful using inexact scheduling.');
-        } catch (retryError) {
-          log('❌ Retry failed: $retryError');
-        }
-      }
-    } catch (e) {
-      log('❌ Error scheduling notification: $e');
+      await _requestPermissions();
+      await _checkAndRequestExactAlarm();
+      await handleBackgroundNotification();
+      _initialized = true;
+      log('✅ LocalNotificationsService initialized');
+    } catch (e, s) {
+      log('❌ Init error', error: e, stackTrace: s);
     }
   }
 
-  /// 4. schedulePeriodicNotification
-  Future<void> schedulePeriodicNotification({
-    required String title,
-    required String body,
-    String? payload,
-    required RepeatInterval interval,
-  }) async {
-    try {
-      await _flutterLocalNotificationsPlugin.periodicallyShow(
-        DateTime.now()
-            .millisecond, // NOTE: ID management should ideally be better for periodic to cancel them
-        title,
-        body,
-        interval,
-        _getPlatformChannelSpecifics(),
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        payload: payload,
-      );
-      log('🔄 Periodic notification scheduled: $interval');
-    } catch (e) {
-      log('❌ Error scheduling periodic notification: $e');
+  Future<void> _requestPermissions() async {
+    if (await Permission.notification.isDenied) {
+      await Permission.notification.request();
+    }
+    if (Platform.isAndroid) {
+      final androidImpl = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      await androidImpl?.requestNotificationsPermission();
+    } else if (Platform.isIOS) {
+      final iosImpl = _plugin
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >();
+      await iosImpl?.requestPermissions(alert: true, badge: true, sound: true);
     }
   }
 
-  /// 4. repeatNotification
-  Future<void> repeatNotification({
+  bool get enabled => _enabled;
+
+  Future<void> enable() async {
+    await _requestPermissions();
+    _enabled = true;
+    log('🔔 Notifications ENABLED');
+  }
+
+  Future<void> disable() async {
+    _enabled = false;
+    await _plugin.cancelAll();
+    log('🔕 Notifications DISABLED & canceled');
+  }
+
+  Future<void> toggle(bool value) async =>
+      value ? await enable() : await disable();
+
+  Future<void> show({
     required String title,
     required String body,
     String? payload,
-    required RepeatInterval interval,
   }) async {
-    // Delegating to periodic notification as functionality is identical for defined intervals
-    await schedulePeriodicNotification(
+    if (!_enabled) return;
+    final id = m.Random().nextInt(1000000);
+    await _plugin.show(
+      id: id,
       title: title,
       body: body,
+      notificationDetails: _details(),
       payload: payload,
-      interval: interval,
     );
   }
 
-  void _handleNotificationTap(NotificationResponse response) {
-    if (response.payload != null) {
-      log('🚀 Handle navigation for payload: ${response.payload}');
-      // Add logic to navigate to specific screen
+  // 1. تعديل ميثود الـ schedule
+  Future<void> schedule({
+    required String title,
+    required String body,
+    required String delay,
+    String? payload,
+    int priority = 1,
+  }) async {
+    if (!_enabled || delay.isEmpty) return;
+
+    final scheduledDate = DateTime.parse(delay);
+    final diff = scheduledDate.difference(DateTime.now());
+
+    if (diff.isNegative) {
+      log('🚫 Past date ignored: $delay');
+      return;
     }
+
+    final id = scheduledDate.millisecondsSinceEpoch.remainder(123456789);
+
+    log('🔔 Scheduling ID $id in ${diff.inMinutes} mins');
+
+    await _plugin.zonedSchedule(
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: tz.TZDateTime.from(scheduledDate, tz.local),
+      notificationDetails: _details(priority: _priority(priority)),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+
+      matchDateTimeComponents: DateTimeComponents.dateAndTime,
+      payload: payload,
+    );
+  }
+
+  Future<void> periodic({
+    required String title,
+    required String body,
+    required RepeatInterval interval,
+    String? payload,
+  }) async {
+    if (!_enabled) return;
+    final id = m.Random().nextInt(1000000);
+    await _plugin.periodicallyShow(
+      id: id,
+      title: title,
+      body: body,
+      repeatInterval: interval,
+      notificationDetails: _details(),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      payload: payload,
+    );
+  }
+
+  Future<void> _checkAndRequestExactAlarm() async {
+    if (Platform.isAndroid) {
+      final androidPlugin = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+
+      final bool? hasPermission = await androidPlugin
+          ?.canScheduleExactNotifications();
+
+      if (hasPermission == false) {
+        log('❌ Exact alarm permission not granted. Requesting...');
+
+        await androidPlugin?.requestExactAlarmsPermission();
+      } else {
+        log('✅ Exact alarm permission is already granted');
+      }
+    }
+  }
+
+  NotificationDetails _details({Priority priority = Priority.defaultPriority}) {
+    return NotificationDetails(
+      android: AndroidNotificationDetails(
+        'high_importance_channel',
+        'High Importance Notifications',
+        channelDescription: 'This channel is used for important notifications.',
+        importance: Importance.max,
+        priority: priority,
+        playSound: true,
+        enableVibration: true,
+        visibility: NotificationVisibility.public,
+        ticker: 'ticker',
+        largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentSound: true,
+        presentBadge: true,
+      ),
+    );
+  }
+
+  Priority _priority(int p) {
+    if (p == 0) return Priority.low;
+    if (p == 2) return Priority.high;
+    return Priority.defaultPriority;
+  }
+
+  //handle all local notification
+  Future<void> _handleLocalNotification(NotificationResponse response) async {
+    final handle = DeepLinkHelper.instance;
+    if (response.payload != null) {
+      log("🧭 Notification Tap Detected with Payload: ${response.id}");
+
+      Future.microtask(() async {
+        if (response.payload != null && response.payload!.contains('url')) {
+          await handle.launchUrl(response.payload ?? '');
+        } else {
+          await handle.handleRouteById(pyload: response.payload ?? '');
+        }
+      });
+    }
+  }
+
+  Future<void> handleBackgroundNotification() async {
+    final details = await _plugin.getNotificationAppLaunchDetails();
+
+    if (details != null &&
+        details.didNotificationLaunchApp &&
+        details.notificationResponse != null) {
+      log(
+        "🚀 App launched via Notification with payload: ${details.notificationResponse?.payload}",
+      );
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      await _handleLocalNotification(details.notificationResponse!);
+    }
+  }
+}
+
+final localNotificationsServiceProvider = Provider<LocalNotificationsService>(
+  (ref) => LocalNotificationsService.instance,
+);
+@pragma('vm:entry-point')
+Future<void> notificationTapBackground(NotificationResponse response) async {
+  if (response.payload != null) {
+    await DeepLinkHelper.instance.handleRouteById(
+      pyload: response.payload ?? "0",
+    );
+  } else {
+    log("No event ID found in the notification data.");
   }
 }

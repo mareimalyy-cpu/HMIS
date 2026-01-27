@@ -6,5 +6,8 @@
   "dark": "Dark",
   "system": "System",
   "confirmButton": "Confirm",
-  "cancelButton": "Cancel"
+  "cancelButton": "Cancel",
+  "selectLanguage": "Select Language",
+  "goodEvening":"Good Evening",
+  "goodMorning":"Good Morning"
 }

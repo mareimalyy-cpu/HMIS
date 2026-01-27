@@ -11,7 +11,7 @@ import 'package:riverpod_core/core/notifications/local_notifications_service.dar
 import 'package:riverpod_core/core/services/life_cycle_manager.dart';
 
 import 'core/local_services/local_storage.dart';
-import 'core/services/app_router.dart';
+import 'core/router/index.dart';
 import 'core/services/helper.dart';
 import 'core/services/scroll_behavior.dart';
 import 'core/themes/style.dart';
@@ -69,6 +69,7 @@ class MyApp extends ConsumerWidget {
       ],
       child: LifeCycleManager(
         child: MaterialApp.router(
+          scaffoldMessengerKey: scaffoldMessengerKey,
           scrollBehavior: CustomScrollBehavior(),
           debugShowCheckedModeBanner: false,
           localizationsDelegates: context.localizationDelegates,
@@ -76,7 +77,7 @@ class MyApp extends ConsumerWidget {
           locale: context.locale,
           theme: getLightTheme(),
           darkTheme: getDarkTheme(),
-          routerConfig: AppRouter.instance.router,
+          routerConfig: Routes.instance.getRoutes(),
           builder: (context, child) {
             final mediaQueryData = MediaQuery.of(context);
             return ResponsiveScaledBox(
@@ -117,3 +118,6 @@ class MyApp extends ConsumerWidget {
     );
   }
 }
+
+final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+

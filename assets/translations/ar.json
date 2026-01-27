@@ -6,5 +6,8 @@
   "dark": "غامق",
   "system": "النظام",
   "confirmButton": "تأكيد",
-  "cancelButton": "إلغاء"
+  "cancelButton": "إلغاء",
+  "selectLanguage": "اختر اللغة",
+  "goodEvening":"مساء الخير",
+  "goodMorning":"صباح الخير"
 }

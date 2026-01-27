@@ -4,4 +4,7 @@ enum Constants {
   language,
   theme,
   fontSize,
+  mainBox,
+  mainKey,
+  deviceInfo,
 }

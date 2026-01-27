@@ -30,7 +30,9 @@ environment:
 dependencies:
   android_intent_plus: ^6.0.0
   cloud_firestore: ^6.1.0
+  connectivity_plus: ^7.0.0
   cupertino_icons: ^1.0.8
+  device_info_plus: ^12.3.0
   dio: ^5.9.0
   easy_localization: ^3.0.8
   firebase_auth: ^6.1.2
@@ -39,7 +41,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_image_compress: ^2.4.0
-  flutter_local_notifications: ^19.5.0
+  flutter_local_notifications: ^20.0.0
   flutter_localizations:
     sdk: flutter
   flutter_native_timezone_latest: ^1.0.0
@@ -51,12 +53,11 @@ dependencies:
   hive_flutter: ^1.1.0
   image_picker: ^1.2.1
   intl: ^0.20.2
-  isar_community: ^3.3.0
-  isar_community_flutter_libs: ^3.3.0
   path_provider: ^2.1.2
+  permission_handler: ^12.0.1
   rename_app: ^1.6.5
   responsive_framework: ^1.5.1
-  riverpod_annotation: ^3.0.3
+  riverpod_annotation: ^4.0.1
   skeletonizer: ^2.1.1
   timezone: ^0.10.1
   url_launcher: ^6.3.2
@@ -69,10 +70,6 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   flutter_test:
     sdk: flutter
-  # riverpod_generator: ^3.0.3 <-- REMOVED
-  # riverpod_lint: ^3.0.3 <-- REMOVED
-  isar_community_generator: ^3.3.0
-
 flutter:
 
   uses-material-design: true

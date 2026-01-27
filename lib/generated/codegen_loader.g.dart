@@ -22,7 +22,10 @@ class CodegenLoader extends AssetLoader{
   "dark": "Dark",
   "system": "System",
   "confirmButton": "Confirm",
-  "cancelButton": "Cancel"
+  "cancelButton": "Cancel",
+  "selectLanguage": "Select Language",
+  "goodEvening": "Good Evening",
+  "goodMorning": "Good Morning"
 };
 static const Map<String,dynamic> _ar = {
   "hello": "مرحبا",
@@ -32,7 +35,10 @@ static const Map<String,dynamic> _ar = {
   "dark": "غامق",
   "system": "النظام",
   "confirmButton": "تأكيد",
-  "cancelButton": "إلغاء"
+  "cancelButton": "إلغاء",
+  "selectLanguage": "اختر اللغة",
+  "goodEvening": "مساء الخير",
+  "goodMorning": "صباح الخير"
 };
 static const Map<String, Map<String,dynamic>> mapLocales = {"en": _en, "ar": _ar};
 }

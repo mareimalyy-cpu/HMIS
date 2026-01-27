@@ -11,5 +11,8 @@ abstract class  LocaleKeys {
   static const system = 'system';
   static const confirmButton = 'confirmButton';
   static const cancelButton = 'cancelButton';
+  static const selectLanguage = 'selectLanguage';
+  static const goodEvening = 'goodEvening';
+  static const goodMorning = 'goodMorning';
 
 }
