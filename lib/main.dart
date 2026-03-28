@@ -2,32 +2,44 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/foundation.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hmis/core/helper/help_functions.dart';
 import 'package:responsive_framework/responsive_framework.dart';
-import 'package:riverpod_core/core/constants.dart';
-import 'package:riverpod_core/core/notifications/local_notifications_service.dart';
-import 'package:riverpod_core/core/services/life_cycle_manager.dart';
 
+import 'core/constants.dart';
+import 'core/extension/theme_mode.dart';
 import 'core/local_services/local_storage.dart';
+import 'core/notifications/notification_initializer.dart';
 import 'core/router/index.dart';
-import 'core/services/helper.dart';
+import 'core/services/life_cycle_manager.dart';
 import 'core/services/scroll_behavior.dart';
 import 'core/themes/style.dart';
+import 'features/settings/providers/settings_provider.dart';
+import 'firebase_options.dart';
 import 'generated/codegen_loader.g.dart';
 
 Future<void> firstInit() async {
   try {
     await LocalStorage.instance.init();
   } catch (e) {
-    log('Error when init LocalStorage: $e');
+    log('error_when_init_localstorage_e'.tr());
   }
-
   try {
-    await LocalNotificationsService.instance.init();
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      debugPrint('firebase_initialized_successfully'.tr());
+    }
   } catch (e) {
-    log('Error when init LocalNotificationsService: $e');
+    debugPrint('firebase_initialization_etostring'.tr());
+  }
+  try {
+    await NotificationInitializer.instance.init();
+  } catch (e) {
+    log('error_when_init_localnotificationsservice_e'.tr());
   }
 }
 
@@ -50,8 +62,8 @@ void main() {
       );
     },
     (error, stackTrace) {
-      log('Error: $error');
-      log('Stack trace: $stackTrace');
+      log('error_error'.tr());
+      log('stack_trace_stacktrace'.tr());
     },
   );
 }
@@ -61,58 +73,59 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return ResponsiveBreakpoints(
-      breakpoints: [
-        Breakpoint(start: 0, end: 600, name: MOBILE),
-        Breakpoint(start: 601, end: 1200, name: TABLET),
-        Breakpoint(start: 1201, end: double.infinity, name: DESKTOP),
-      ],
-      child: LifeCycleManager(
-        child: MaterialApp.router(
-          scaffoldMessengerKey: scaffoldMessengerKey,
-          scrollBehavior: CustomScrollBehavior(),
-          debugShowCheckedModeBanner: false,
-          localizationsDelegates: context.localizationDelegates,
-          supportedLocales: context.supportedLocales,
-          locale: context.locale,
-          theme: getLightTheme(),
-          darkTheme: getDarkTheme(),
-          routerConfig: Routes.instance.getRoutes(),
-          builder: (context, child) {
-            final mediaQueryData = MediaQuery.of(context);
-            return ResponsiveScaledBox(
-              width: ResponsiveValue<double?>(
-                context,
-                conditionalValues: [
-                  if (kIsWeb)
-                    Condition.equals(
-                      name: DESKTOP,
-                      value: mediaQueryData.size.width,
-                    ),
-                  const Condition.equals(name: MOBILE, value: 450),
-                  const Condition.between(start: 601, end: 800, value: 800),
-                  Condition.between(
-                    start: 801,
-                    end: 1200,
-                    value: mediaQueryData.size.width,
-                  ),
-                  Condition.largerThan(
-                    name: TABLET,
-                    value: mediaQueryData.size.width,
-                  ),
-                ],
-              ).value,
-              child: MediaQuery(
-                data: mediaQueryData.copyWith(textScaler: TextScaler.linear(1)),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                  ),
-                  child: child,
+    // Watch settings for theme/font reactivity
+    final settingsAsync = ref.watch(settingsProvider);
+    final themeMode = settingsAsync.value?.mode ?? Thememode.system;
+    final fontFamily = settingsAsync.value?.fontFamily.displayName ?? '';
+    final fontSize = settingsAsync.value?.fontSize;
+    return GestureDetector(
+      onTap: unfocusCurrent,
+      child: ResponsiveBreakpoints(
+        breakpoints: [
+          Breakpoint(start: 0, end: 600, name: MOBILE),
+          Breakpoint(start: 601, end: 1200, name: TABLET),
+          Breakpoint(start: 1201, end: double.infinity, name: DESKTOP),
+        ],
+        child: LifeCycleManager(
+          child: MaterialApp.router(
+            scaffoldMessengerKey: scaffoldMessengerKey,
+            scrollBehavior: CustomScrollBehavior(),
+            debugShowCheckedModeBanner: false,
+            localizationsDelegates: context.localizationDelegates,
+            supportedLocales: context.supportedLocales,
+            locale: context.locale,
+            themeMode: Thememode.fromThememode(themeMode),
+            theme: getLightTheme(fontFamily: fontFamily),
+            darkTheme: getDarkTheme(fontFamily: fontFamily),
+            routerConfig: Routes.instance.getRoutes(),
+            builder: (context, child) {
+              return ResponsiveScaledBox(
+                width: ResponsiveValue<double?>(
+                  context,
+                  conditionalValues: [
+                    const Condition.equals(name: MOBILE, value: 450),
+                    const Condition.between(start: 451, end: 800, value: 800),
+                  ],
+                ).value,
+                child: Builder(
+                  builder: (innerContext) {
+                    final mediaQueryData = MediaQuery.of(innerContext);
+                    return MediaQuery(
+                      data: mediaQueryData.copyWith(
+                        textScaler: TextScaler.linear(fontSize?.size ?? 1),
+                      ),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Theme.of(innerContext).colorScheme.surface,
+                        ),
+                        child: child ?? const SizedBox.shrink(),
+                      ),
+                    );
+                  },
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );
@@ -120,4 +133,3 @@ class MyApp extends ConsumerWidget {
 }
 
 final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
-

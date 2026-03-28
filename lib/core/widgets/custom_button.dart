@@ -46,7 +46,11 @@ class CustomButton extends StatelessWidget {
         ),
         child: Center(
           child: isLoading
-              ? CircularProgressIndicator()
+              ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2.2),
+                )
               : Text(
                   text,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:riverpod_core/core/themes/app_colors.dart';
 
 import '../extension/font_family.dart';
+import 'app_colors.dart';
 
 const MaterialColor greenSwatch = MaterialColor(0XFF000000, {
   50: Color(0xFFF3FAF6), // خلفية فاتحة جدًا فيها لمسة خضار

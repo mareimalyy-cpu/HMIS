@@ -1,0 +1,206 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hmis/core/services/helper.dart';
+
+import '../../../core/themes/app_colors.dart';
+import '../../../core/utils/validators.dart';
+import '../../../core/widgets/custom_button.dart';
+import '../../../core/widgets/my_text_filed.dart';
+import '../../../gen/assets.gen.dart';
+import '../providers/auth_provider.dart';
+
+class PatientRegisterPage extends ConsumerStatefulWidget {
+  static const routeName = '/patient-register';
+
+  const PatientRegisterPage({super.key});
+
+  @override
+  ConsumerState<PatientRegisterPage> createState() =>
+      _PatientRegisterPageState();
+}
+
+class _PatientRegisterPageState extends ConsumerState<PatientRegisterPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _cityController = TextEditingController();
+  final _ageController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _cityController.dispose();
+    _ageController.dispose();
+    _phoneController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  void _handleRegister() {
+    if (!_formKey.currentState!.validate()) return;
+    ref
+        .read(authProvider.notifier)
+        .registerPatient(
+          name: _nameController.text.trim(),
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          phone: _phoneController.text.trim(),
+          city: _cityController.text.trim(),
+          age: int.tryParse(_ageController.text.trim()) ?? 0,
+        );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+
+    ref.listen(authProvider, (prev, next) {
+      final state = next.value;
+      if (state == null) return;
+
+      if (state.errorMessage != null) {
+        GlassySnackbar.showError(context, state.errorMessage!);
+      }
+
+      if (state.isAuthenticated && state.currentUser != null) {
+        context.go('/patient-home');
+      }
+    });
+
+    final isLoading = authState.value?.isLoading ?? false;
+
+    return Scaffold(
+      backgroundColor: AppColors.white,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                const SizedBox(height: 30),
+                Assets.images.png.appLogo.image(height: 80),
+                const SizedBox(height: 16),
+                Text(
+                  'patient_registration'.tr(),
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: AppColors.teal,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                MyTextField(
+                  controller: _nameController,
+                  hintText: 'name'.tr(),
+                  textInputAction: TextInputAction.next,
+
+                  fillColor: AppColors.cardBackground,
+                  validator: (v) => Validators.validateRequired(v, 'name'.tr()),
+                ),
+                const SizedBox(height: 12),
+                MyTextField(
+                  controller: _emailController,
+                  hintText: 'email'.tr(),
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+
+                  fillColor: AppColors.cardBackground,
+                  validator: Validators.validateEmail,
+                ),
+                const SizedBox(height: 12),
+                MyTextField(
+                  controller: _cityController,
+                  hintText: 'city'.tr(),
+                  textInputAction: TextInputAction.next,
+
+                  fillColor: AppColors.cardBackground,
+                  validator: (v) => Validators.validateRequired(v, 'city'.tr()),
+                ),
+                const SizedBox(height: 12),
+                MyTextField(
+                  controller: _ageController,
+                  hintText: 'age'.tr(),
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.next,
+
+                  fillColor: AppColors.cardBackground,
+                  validator: (v) => Validators.validateRequired(v, 'age'.tr()),
+                ),
+                const SizedBox(height: 12),
+                MyTextField(
+                  controller: _phoneController,
+                  hintText: 'phone'.tr(),
+                  keyboardType: TextInputType.phone,
+                  textInputAction: TextInputAction.next,
+
+                  fillColor: AppColors.cardBackground,
+                  validator: Validators.validatePhone,
+                ),
+                const SizedBox(height: 12),
+                MyTextField(
+                  controller: _passwordController,
+                  hintText: 'create_password'.tr(),
+                  obscureText: true,
+                  textInputAction: TextInputAction.next,
+
+                  fillColor: AppColors.cardBackground,
+                  validator: Validators.validatePassword,
+                ),
+                const SizedBox(height: 12),
+                MyTextField(
+                  controller: _confirmPasswordController,
+                  hintText: 'confirm_password'.tr(),
+                  obscureText: true,
+                  textInputAction: TextInputAction.done,
+
+                  fillColor: AppColors.cardBackground,
+                  validator: (v) {
+                    if (v != _passwordController.text) {
+                      return 'passwords_do_not_match'.tr();
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 24),
+                CustomButton(
+                  text: 'register'.tr(),
+                  isLoading: isLoading,
+                  grideantColor: AppColors.teal,
+                  onPressed: _handleRegister,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'already_have_an_account'.tr(),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    GestureDetector(
+                      onTap: () => context.pop(),
+                      child: Text(
+                        'sign_in'.tr(),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.teal,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

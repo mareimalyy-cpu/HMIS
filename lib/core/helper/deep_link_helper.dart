@@ -23,7 +23,7 @@ class DeepLinkHelper {
     Future.microtask(() async {
       switch (type) {
         case 'myEvents':
-        // router.goNamed(page name here.routeName);
+          // router.goNamed(page name here.routeName);
           // router.pushNamed(
           //   MyEventDetailsPage.routeName,
           //   pathParameters: {'id': id},

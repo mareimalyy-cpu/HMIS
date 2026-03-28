@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "594079591247",
+    "project_id": "hmis-f59bd",
+    "storage_bucket": "hmis-f59bd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:594079591247:android:60e8db4b70a0148829733a",
+        "android_client_info": {
+          "package_name": "com.example.hmis"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC7q0jn8juQscrTz20xKFil9dh8X8NRmD4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

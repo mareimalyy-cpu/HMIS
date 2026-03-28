@@ -1,5 +1,7 @@
 enum Constants {
   userData,
+  userRole,
+  authToken,
   hideOnboarding,
   language,
   theme,
@@ -7,4 +9,7 @@ enum Constants {
   mainBox,
   mainKey,
   deviceInfo,
+  users,
+  role,
+  specialty,
 }

@@ -10,12 +10,12 @@ part of '../local_storage.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(localStorage)
-final localStorageProvider = LocalStorageProvider._();
+const localStorageProvider = LocalStorageProvider._();
 
 final class LocalStorageProvider
     extends $FunctionalProvider<LocalStorage, LocalStorage, LocalStorage>
     with $Provider<LocalStorage> {
-  LocalStorageProvider._()
+  const LocalStorageProvider._()
     : super(
         from: null,
         argument: null,

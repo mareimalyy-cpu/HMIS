@@ -11,7 +11,7 @@ targets:
               'lib/core/local_services/{{file}}.dart': 'lib/core/local_services/generated/{{file}}.g.dart',
               'lib/core/remote_services/{{file}}.dart': 'lib/core/remote_services/generated/{{file}}.g.dart',
               'lib/core/services/{{file}}.dart': 'lib/core/services/generated/{{file}}.g.dart',
-              'lib/features/{{features}}/data/providers/{{file}}.dart': 'lib/features/{{features}}/data/providers/generated/{{file}}.g.dart',
+              'lib/features/{{features}}/providers/{{file}}.dart': 'lib/features/{{features}}/providers/generated/{{file}}.g.dart',
             }
       riverpod_generator:
         options:

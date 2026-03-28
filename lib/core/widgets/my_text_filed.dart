@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:riverpod_core/core/themes/app_colors.dart';
 
+import '../themes/app_colors.dart';
 import '../themes/style.dart';
 
 class MyTextField extends StatelessWidget {

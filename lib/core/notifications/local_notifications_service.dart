@@ -49,7 +49,7 @@ class LocalNotificationsService {
         onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
       );
       await _requestPermissions();
-      await _checkAndRequestExactAlarm();
+      // await _checkAndRequestExactAlarm();
       await handleBackgroundNotification();
       _initialized = true;
       log('✅ LocalNotificationsService initialized');

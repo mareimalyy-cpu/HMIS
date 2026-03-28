@@ -5,7 +5,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'dart:io';
 
-import 'package:riverpod_core/core/enum/constants.dart' show Constants;
+import '../enum/constants.dart';
 
 
 class DeviceInfoService {
