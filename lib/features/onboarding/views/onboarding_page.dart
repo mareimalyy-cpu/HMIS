@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hmis/generated/locale_keys.g.dart';
 
 import '../../../core/enum/constants.dart';
 import '../../../core/local_services/local_storage.dart';
@@ -36,9 +37,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
     ),
     _OnboardingData(
       svg: Assets.images.svg.on3,
-      title: 'find_a_specialist'.tr(),
+      title: LocaleKeys.find_a_specialist.tr(),
       description:
-          'discover_a_wide_range_of_expert_doctors_across_various_medical_fields'.tr(),
+          LocaleKeys.discover_a_wide_range_of_expert_doctors_across_various_medical_fields.tr(),
     ),
   ];
 

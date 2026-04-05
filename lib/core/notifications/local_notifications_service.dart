@@ -164,25 +164,25 @@ class LocalNotificationsService {
     );
   }
 
-  Future<void> _checkAndRequestExactAlarm() async {
-    if (Platform.isAndroid) {
-      final androidPlugin = _plugin
-          .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >();
+  // Future<void> _checkAndRequestExactAlarm() async {
+  //   if (Platform.isAndroid) {
+  //     final androidPlugin = _plugin
+  //         .resolvePlatformSpecificImplementation<
+  //           AndroidFlutterLocalNotificationsPlugin
+  //         >();
 
-      final bool? hasPermission = await androidPlugin
-          ?.canScheduleExactNotifications();
+  //     final bool? hasPermission = await androidPlugin
+  //         ?.canScheduleExactNotifications();
 
-      if (hasPermission == false) {
-        log('❌ Exact alarm permission not granted. Requesting...');
+  //     if (hasPermission == false) {
+  //       log('❌ Exact alarm permission not granted. Requesting...');
 
-        await androidPlugin?.requestExactAlarmsPermission();
-      } else {
-        log('✅ Exact alarm permission is already granted');
-      }
-    }
-  }
+  //       await androidPlugin?.requestExactAlarmsPermission();
+  //     } else {
+  //       log('✅ Exact alarm permission is already granted');
+  //     }
+  //   }
+  // }
 
   NotificationDetails _details({Priority priority = Priority.defaultPriority}) {
     return NotificationDetails(

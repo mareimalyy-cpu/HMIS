@@ -87,7 +87,7 @@ class AuthRemoteService {
     if (!doc.exists) {
       throw Exception('User not found in database');
     }
-    return UserModel.fromJson(doc.data()!);
+    return UserModel.fromJson(doc.data() ??{});
   }
 
   Future<UserModel?> getCurrentUser() async {
