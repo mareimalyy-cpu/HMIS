@@ -1,0 +1,234 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../core/themes/app_colors.dart';
+import '../../../core/widgets/search_field.dart';
+import '../../auth/models/user_model.dart';
+import '../services/admin_remote_service.dart';
+import 'widgets/admin_header.dart';
+
+final _adminPatientsProvider =
+    FutureProvider<List<UserModel>>((ref) async {
+  return AdminRemoteService().getAllPatients();
+});
+
+class AdminPatientsPage extends ConsumerStatefulWidget {
+  const AdminPatientsPage({super.key});
+
+  @override
+  ConsumerState<AdminPatientsPage> createState() => _AdminPatientsPageState();
+}
+
+class _AdminPatientsPageState extends ConsumerState<AdminPatientsPage> {
+  final _searchController = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final asyncPatients = ref.watch(_adminPatientsProvider);
+
+    return Scaffold(
+      body: asyncPatients.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('حدث خطأ: $e')),
+        data: (patients) {
+          final filtered = _query.isEmpty
+              ? patients
+              : patients
+                  .where((p) =>
+                      p.name.contains(_query) ||
+                      p.phone.contains(_query) ||
+                      p.id.contains(_query))
+                  .toList();
+
+          return RefreshIndicator(
+            onRefresh: () =>
+                ref.refresh(_adminPatientsProvider.future),
+            child: CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Column(
+                    children: [
+                      const AdminHeader(),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        child: SearchField(
+                          controller: _searchController,
+                          hintText: 'ابحث عن مريض',
+                          onChanged: (v) => setState(() => _query = v),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) =>
+                          _PatientCard(patient: filtered[index]),
+                      childCount: filtered.length,
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: _TotalCard(
+                      label: 'اجمالي المرضي',
+                      count: patients.length,
+                      icon: Icons.people_alt_rounded,
+                    ),
+                  ),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _PatientCard extends StatelessWidget {
+  final UserModel patient;
+  const _PatientCard({required this.patient});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.card(context),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          // View button
+          ElevatedButton.icon(
+            onPressed: () {
+              context.push('/admin-patient-detail', extra: patient);
+            },
+            icon: const Icon(Icons.remove_red_eye, size: 16),
+            label: const Text('عرض'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.teal,
+              foregroundColor: Colors.white,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+              textStyle: const TextStyle(fontSize: 13),
+            ),
+          ),
+          const Spacer(),
+          // Info
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                patient.name,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: AppColors.teal,
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Text(patient.id.isNotEmpty
+                      ? patient.id.substring(0, 6).toUpperCase()
+                      : '---'),
+                  const SizedBox(width: 6),
+                  Text(
+                    'ID',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Text(patient.phone),
+                  const SizedBox(width: 6),
+                  Icon(Icons.phone_in_talk, size: 16, color: Colors.grey[600]),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(width: 12),
+          // Avatar
+          CircleAvatar(
+            radius: 28,
+            backgroundColor: AppColors.cardBackground,
+            backgroundImage: patient.imageUrl != null
+                ? NetworkImage(patient.imageUrl!)
+                : null,
+            child: patient.imageUrl == null
+                ? const Icon(Icons.person, size: 28, color: Colors.grey)
+                : null,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TotalCard extends StatelessWidget {
+  final String label;
+  final int count;
+  final IconData icon;
+
+  const _TotalCard({
+    required this.label,
+    required this.count,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.card(context),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Icon(icon, size: 48, color: AppColors.teal),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                label,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              Text(
+                count.toString(),
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: AppColors.teal,
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}

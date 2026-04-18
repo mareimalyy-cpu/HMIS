@@ -1,9 +1,9 @@
 enum FontSizes {
-  small('Small', 0),
-  medium('Medium', 1.4),
-  large('Large', 1.8),
-  extraLarge('Extra Large', 2.2),
-  huge('Huge', 2.6);
+  small('Small', 0.8),
+  medium('Medium', 1.2),
+  large('Large', 1.4),
+  extraLarge('Extra Large', 1.8),
+  huge('Huge', 2.2);
 
   const FontSizes(this.displayName, this.size);
   final String displayName;

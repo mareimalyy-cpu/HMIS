@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../features/admin_home/views/admin_patient_detail_page.dart';
+import '../../../features/admin_home/views/admin_shell_page.dart';
 import '../../../features/auth/models/user_model.dart';
 import '../../../features/auth/views/doctor_register_page.dart';
 import '../../../features/auth/views/login_page.dart';
@@ -111,6 +113,19 @@ class MobileRouting extends AppRoutingBase {
           builder: (context, state) => const DoctorShellPage(),
         ),
 
+        // Admin Routes
+        GoRoute(
+          path: AdminShellPage.routeName,
+          builder: (context, state) => const AdminShellPage(),
+        ),
+        GoRoute(
+          path: '/admin-patient-detail',
+          builder: (context, state) {
+            final patient = state.extra as UserModel;
+            return AdminPatientDetailPage(patient: patient);
+          },
+        ),
+
         // Placeholder - Support & Notifications
         GoRoute(
           path: '/notifications',
@@ -124,6 +139,7 @@ class MobileRouting extends AppRoutingBase {
         ),
         GoRoute(
           path: SettingsPage.routeName,
+          name: SettingsPage.routeName,
           builder: (context, state) => const SettingsPage(),
         ),
       ],

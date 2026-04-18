@@ -19,6 +19,7 @@ class AuthStates {
 
   bool get isDoctor => currentUser?.role == UserRole.doctor;
   bool get isPatient => currentUser?.role == UserRole.patient;
+  bool get isAdmin => currentUser?.role == UserRole.admin;
 
   AuthStates copyWith({
     UserModel? currentUser,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hmis/core/services/helper.dart';
+import 'package:hmis/generated/locale_keys.g.dart';
 
 import '../../../core/themes/app_colors.dart';
 import '../../../core/utils/validators.dart';
@@ -60,9 +61,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       }
 
       if (state.isAuthenticated && state.currentUser != null) {
-        // Navigate to home based on role
-        if (state.currentUser!.role == UserRole.doctor) {
+        final role = state.currentUser!.role;
+        if (role == UserRole.doctor) {
           context.go('/doctor-home');
+        } else if (role == UserRole.admin) {
+          context.go('/admin-home');
         } else {
           context.go('/patient-home');
         }
@@ -122,11 +125,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () {
-                      // TODO: Navigate to forgot password
-                    },
+                    onPressed: () {},
                     child: Text(
-                      'forgot_password'.tr(),
+                    LocaleKeys.forgot_password.tr(),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ),
@@ -138,32 +139,34 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   grideantColor: AppColors.teal,
                   onPressed: _handleLogin,
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'dont_have_an_account'.tr(),
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        if (widget.role == UserRole.patient) {
-                          context.push(PatientRegisterPage.routeName);
-                        } else {
-                          context.push(DoctorRegisterPage.routeName);
-                        }
-                      },
-                      child: Text(
-                        'register_now'.tr(),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.teal,
-                          fontWeight: FontWeight.bold,
+                if (widget.role != UserRole.admin) ...[
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'dont_have_an_account'.tr(),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          if (widget.role == UserRole.patient) {
+                            context.push(PatientRegisterPage.routeName);
+                          } else {
+                            context.push(DoctorRegisterPage.routeName);
+                          }
+                        },
+                        child: Text(
+                          'register_now'.tr(),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.teal,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
