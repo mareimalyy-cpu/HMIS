@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of '../auth_provider.dart';
+part of '../admin_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -9,43 +9,43 @@ part of '../auth_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(Auth)
-const authProvider = AuthProvider._();
+@ProviderFor(Admin)
+const adminProvider = AdminProvider._();
 
-final class AuthProvider extends $AsyncNotifierProvider<Auth, AuthStates> {
-  const AuthProvider._()
+final class AdminProvider extends $AsyncNotifierProvider<Admin, AdminStates> {
+  const AdminProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'authProvider',
+        name: r'adminProvider',
         isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$authHash();
+  String debugGetCreateSourceHash() => _$adminHash();
 
   @$internal
   @override
-  Auth create() => Auth();
+  Admin create() => Admin();
 }
 
-String _$authHash() => r'4667b0aa844825969f1ff216bf1dadcfc5a4f603';
+String _$adminHash() => r'555173d5445d6eb09796ca35dd1667595bf51003';
 
-abstract class _$Auth extends $AsyncNotifier<AuthStates> {
-  FutureOr<AuthStates> build();
+abstract class _$Admin extends $AsyncNotifier<AdminStates> {
+  FutureOr<AdminStates> build();
   @$mustCallSuper
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<AsyncValue<AuthStates>, AuthStates>;
+    final ref = this.ref as $Ref<AsyncValue<AdminStates>, AdminStates>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<AsyncValue<AuthStates>, AuthStates>,
-              AsyncValue<AuthStates>,
+              AnyNotifier<AsyncValue<AdminStates>, AdminStates>,
+              AsyncValue<AdminStates>,
               Object?,
               Object?
             >;

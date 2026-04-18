@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/themes/app_colors.dart';
-import '../../../core/widgets/custom_button.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/section_app_bar.dart';
+import '../../../generated/locale_keys.g.dart';
 import '../../auth/models/user_model.dart';
 import '../../booking/views/booking_page.dart';
 
@@ -17,8 +18,17 @@ class DoctorDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
+    final cardColor = isDark
+        ? colorScheme.surfaceContainerHighest
+        : AppColors.cardBackground;
+    final accentColor = isDark ? AppColors.tealLight : AppColors.teal;
+    final iconColor = isDark ? AppColors.tealLight : AppColors.primary;
+    final subtleColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
+
     return Scaffold(
-      appBar:  SectionAppBar(title: 'doctor_details'.tr()),
+      appBar: SectionAppBar(title: LocaleKeys.doctor_details.tr()),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -27,17 +37,15 @@ class DoctorDetailsPage extends StatelessWidget {
             // Doctor Header
             Row(
               children: [
-                // Name + Specialty + Rating
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        'dr_doctorname'.tr(),
-                        style:
-                            Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                        LocaleKeys.dr_doctorname.tr(),
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
@@ -47,8 +55,7 @@ class DoctorDetailsPage extends StatelessWidget {
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                           const SizedBox(width: 8),
-                          const Icon(Icons.star,
-                              color: Colors.amber, size: 18),
+                          const Icon(Icons.star, color: Colors.amber, size: 18),
                           Text(
                             '${doctor.rating?.toInt() ?? 0}',
                             style: Theme.of(context).textTheme.bodyMedium,
@@ -61,13 +68,12 @@ class DoctorDetailsPage extends StatelessWidget {
                 const SizedBox(width: 16),
                 CircleAvatar(
                   radius: 50,
-                  backgroundColor: Colors.grey[300],
+                  backgroundColor: isDark ? Colors.grey[700] : Colors.grey[300],
                   backgroundImage: doctor.imageUrl != null
                       ? NetworkImage(doctor.imageUrl!)
                       : null,
                   child: doctor.imageUrl == null
-                      ? const Icon(Icons.person,
-                          size: 50, color: Colors.white)
+                      ? const Icon(Icons.person, size: 50, color: Colors.white)
                       : null,
                 ),
               ],
@@ -77,17 +83,18 @@ class DoctorDetailsPage extends StatelessWidget {
 
             // Bio Section
             Text(
-              'about'.tr(),
+              LocaleKeys.about.tr(),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                color: accentColor,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
-              doctor.bio ?? 'no_bio_available'.tr(),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              doctor.bio ?? LocaleKeys.no_bio_available.tr(),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: subtleColor),
             ),
 
             const SizedBox(height: 20),
@@ -97,25 +104,26 @@ class DoctorDetailsPage extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.cardBackground,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
                 children: [
-                  // Work Days
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       Text(
-                        doctor.workDays?.join(', ') ?? 'not_specified'.tr(),
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.grey[600],
-                            ),
+                        doctor.workDays?.join(', ') ??
+                            LocaleKeys.not_specified.tr(),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.copyWith(color: subtleColor),
                       ),
+                      const SizedBox(width: 8),
+                      Icon(Icons.calendar_today, size: 18, color: subtleColor),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  // Work Hours
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -124,11 +132,10 @@ class DoctorDetailsPage extends StatelessWidget {
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       const SizedBox(width: 8),
-                      const Icon(Icons.access_time, size: 20),
+                      Icon(Icons.access_time, size: 20, color: subtleColor),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  // Address
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -140,7 +147,7 @@ class DoctorDetailsPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      const Icon(Icons.location_on, size: 20),
+                      Icon(Icons.location_on, size: 20, color: subtleColor),
                     ],
                   ),
                 ],
@@ -151,18 +158,18 @@ class DoctorDetailsPage extends StatelessWidget {
 
             // Contact Info
             Text(
-              'contact_info'.tr(),
+              LocaleKeys.contact_info.tr(),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.teal,
-                    fontWeight: FontWeight.bold,
-                  ),
+                color: accentColor,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 8),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.cardBackground,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -170,20 +177,24 @@ class DoctorDetailsPage extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Text(doctor.email,
-                          style: Theme.of(context).textTheme.bodyMedium),
+                      Text(
+                        doctor.email,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
                       const SizedBox(width: 8),
-                      const Icon(Icons.mail, color: AppColors.primary),
+                      Icon(Icons.mail, color: iconColor),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Text(doctor.phone,
-                          style: Theme.of(context).textTheme.bodyMedium),
+                      Text(
+                        doctor.phone,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
                       const SizedBox(width: 8),
-                      const Icon(Icons.phone, color: AppColors.primary),
+                      Icon(Icons.phone, color: iconColor),
                     ],
                   ),
                 ],
@@ -192,14 +203,10 @@ class DoctorDetailsPage extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // Book Now Button
-            CustomButton(
-              text: 'book_now'.tr(),
-              grideantColor: AppColors.teal,
-              onPressed: () => context.push(
-                BookingPage.routeName,
-                extra: doctor,
-              ),
+            AppButton.primary(
+              text: LocaleKeys.book_now.tr(),
+              onPressed: () =>
+                  context.push(BookingPage.routeName, extra: doctor),
             ),
           ],
         ),

@@ -33,7 +33,7 @@ final class PatientHomeProvider
   PatientHome create() => PatientHome();
 }
 
-String _$patientHomeHash() => r'c7eeec1a8840af5b978025a462835fe18c05527f';
+String _$patientHomeHash() => r'c506d4df1c1e4b37fbf79cf0df0bcaea79ec8ef5';
 
 abstract class _$PatientHome extends $AsyncNotifier<PatientHomeStates> {
   FutureOr<PatientHomeStates> build();

@@ -7,6 +7,7 @@ import '../../../core/extension/font_size.dart';
 import '../../../core/extension/language.dart';
 import '../../../core/extension/theme_mode.dart';
 import '../../../core/themes/app_colors.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/section_app_bar.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/settings_provider.dart';
@@ -254,7 +255,7 @@ class _SettingsSwitchTile extends StatelessWidget {
           title,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
         ),
-        trailing: Switch.adaptive(value: value, onChanged: onChanged),
+        trailing: Switch.adaptive(value: value, onChanged: onChanged,),
       ),
     );
   }
@@ -286,26 +287,11 @@ class _LogoutButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
+    return AppButton.danger(
+      text: 'sign_out'.tr(),
       onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.danger.withValues(alpha: 0.1),
-        foregroundColor: AppColors.danger,
-        elevation: 0,
-        minimumSize: const Size(double.infinity, 56),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.logout_rounded, size: 20),
-          SizedBox(width: 10),
-          Text(
-            'sign_out'.tr(),
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-        ],
-      ),
+      icon: Icons.logout_rounded,
+      borderRadius: 16,
     );
   }
 }

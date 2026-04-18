@@ -37,7 +37,7 @@ class PatientHomeStates {
 
   List<UserModel> doctorsBySpecialty(String specialtyId) {
     return allDoctors
-        .where((d) => d.specialty?.toLowerCase() == specialtyId.toLowerCase())
+        .where((d) => d.specialty == specialtyId)
         .toList();
   }
 

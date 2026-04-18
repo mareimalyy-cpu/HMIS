@@ -26,7 +26,6 @@ class PatientHome extends _$PatientHome {
     try {
       final localState = _loadFromLocal();
       if (localState != null) {
-        // Load from remote in background
         unawaited(_loadFromRemoteInBackground());
         return localState;
       }
@@ -51,12 +50,19 @@ class PatientHome extends _$PatientHome {
 
   Future<PatientHomeStates> _loadFromRemote() async {
     final user = _authLocalService.getUser();
-    final doctors = await _remoteService.getAllDoctors();
-    unawaited(_localService.saveDoctors(doctors));
+    final results = await Future.wait([
+      _remoteService.getAllDoctors(),
+      _remoteService.getSpecialties(),
+    ]);
+    final doctors = results[0] as List;
+    final specialties = results[1] as List;
+    unawaited(_localService.saveDoctors(doctors.cast()));
     return PatientHomeStates(
       currentUser: user,
-      specialties: SpecialtyModel.defaults,
-      allDoctors: doctors,
+      specialties: specialties.isEmpty
+          ? SpecialtyModel.defaults
+          : specialties.cast<SpecialtyModel>(),
+      allDoctors: doctors.cast(),
     );
   }
 

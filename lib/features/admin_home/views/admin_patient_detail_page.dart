@@ -5,7 +5,7 @@ import '../../../core/themes/app_colors.dart';
 import '../../../core/widgets/section_app_bar.dart';
 import '../../auth/models/user_model.dart';
 import '../../booking/models/appointment_model.dart';
-import '../services/admin_remote_service.dart';
+import '../services/remote/admin_remote_service.dart';
 
 final _patientAppointmentsProvider =
     FutureProvider.family<List<AppointmentModel>, String>((ref, patientId) {
@@ -19,8 +19,7 @@ class AdminPatientDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final asyncAppts =
-        ref.watch(_patientAppointmentsProvider(patient.id));
+    final asyncAppts = ref.watch(_patientAppointmentsProvider(patient.id));
 
     return Scaffold(
       appBar: SectionAppBar(
@@ -36,23 +35,16 @@ class AdminPatientDetailPage extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Avatar + Name
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      patient.name,
-                      style:
-                          Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                color: AppColors.teal,
-                                fontWeight: FontWeight.bold,
-                              ),
-                    ),
-                  ],
+                Text(
+                  patient.name,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        color: AppColors.teal,
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 const SizedBox(width: 16),
                 CircleAvatar(
@@ -62,14 +54,14 @@ class AdminPatientDetailPage extends ConsumerWidget {
                       ? NetworkImage(patient.imageUrl!)
                       : null,
                   child: patient.imageUrl == null
-                      ? const Icon(Icons.person, size: 40, color: Colors.grey)
+                      ? const Icon(Icons.person,
+                          size: 40, color: Colors.grey)
                       : null,
                 ),
               ],
             ),
             const SizedBox(height: 20),
 
-            // Contact Info
             _SectionTitle(title: 'معلومات التواصل'),
             const SizedBox(height: 8),
             Container(
@@ -81,13 +73,9 @@ class AdminPatientDetailPage extends ConsumerWidget {
               ),
               child: Column(
                 children: [
-                  _InfoRow(
-                      icon: Icons.email_rounded,
-                      text: patient.email),
+                  _InfoRow(icon: Icons.email_rounded, text: patient.email),
                   const Divider(height: 16),
-                  _InfoRow(
-                      icon: Icons.phone_rounded,
-                      text: patient.phone),
+                  _InfoRow(icon: Icons.phone_rounded, text: patient.phone),
                   const Divider(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -101,9 +89,10 @@ class AdminPatientDetailPage extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Text(
                         'ID',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -112,7 +101,6 @@ class AdminPatientDetailPage extends ConsumerWidget {
             ),
             const SizedBox(height: 20),
 
-            // Medical History
             _SectionTitle(title: 'التاريخ المرضي'),
             const SizedBox(height: 8),
 

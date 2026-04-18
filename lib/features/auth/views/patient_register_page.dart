@@ -6,7 +6,7 @@ import 'package:hmis/core/services/helper.dart';
 
 import '../../../core/themes/app_colors.dart';
 import '../../../core/utils/validators.dart';
-import '../../../core/widgets/custom_button.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/my_text_filed.dart';
 import '../../../gen/assets.gen.dart';
 import '../providers/auth_provider.dart';
@@ -26,25 +26,49 @@ class _PatientRegisterPageState extends ConsumerState<PatientRegisterPage> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _cityController = TextEditingController();
-  final _ageController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  DateTime? _birthDate;
 
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
     _cityController.dispose();
-    _ageController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
   }
 
+  int get _age {
+    if (_birthDate == null) return 0;
+    final now = DateTime.now();
+    int age = now.year - _birthDate!.year;
+    if (now.month < _birthDate!.month ||
+        (now.month == _birthDate!.month && now.day < _birthDate!.day)) {
+      age--;
+    }
+    return age;
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().subtract(const Duration(days: 365 * 20)),
+      firstDate: DateTime(1940),
+      lastDate: DateTime.now().subtract(const Duration(days: 365 * 5)),
+    );
+    if (picked != null) setState(() => _birthDate = picked);
+  }
+
   void _handleRegister() {
     if (!_formKey.currentState!.validate()) return;
+    if (_birthDate == null) {
+      GlassySnackbar.showError(context, 'يرجى اختيار تاريخ الميلاد');
+      return;
+    }
     ref
         .read(authProvider.notifier)
         .registerPatient(
@@ -53,7 +77,7 @@ class _PatientRegisterPageState extends ConsumerState<PatientRegisterPage> {
           password: _passwordController.text,
           phone: _phoneController.text.trim(),
           city: _cityController.text.trim(),
-          age: int.tryParse(_ageController.text.trim()) ?? 0,
+          age: _age,
         );
   }
 
@@ -61,14 +85,12 @@ class _PatientRegisterPageState extends ConsumerState<PatientRegisterPage> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
 
-    ref.listen(authProvider, (prev, next) {
+    ref.listen(authProvider, (_, next) {
       final state = next.value;
       if (state == null) return;
-
       if (state.errorMessage != null) {
         GlassySnackbar.showError(context, state.errorMessage!);
       }
-
       if (state.isAuthenticated && state.currentUser != null) {
         context.go('/patient-home');
       }
@@ -77,7 +99,6 @@ class _PatientRegisterPageState extends ConsumerState<PatientRegisterPage> {
     final isLoading = authState.value?.isLoading ?? false;
 
     return Scaffold(
-      backgroundColor: AppColors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -100,8 +121,6 @@ class _PatientRegisterPageState extends ConsumerState<PatientRegisterPage> {
                   controller: _nameController,
                   hintText: 'name'.tr(),
                   textInputAction: TextInputAction.next,
-
-                  fillColor: AppColors.cardBackground,
                   validator: (v) => Validators.validateRequired(v, 'name'.tr()),
                 ),
                 const SizedBox(height: 12),
@@ -111,7 +130,6 @@ class _PatientRegisterPageState extends ConsumerState<PatientRegisterPage> {
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
 
-                  fillColor: AppColors.cardBackground,
                   validator: Validators.validateEmail,
                 ),
                 const SizedBox(height: 12),
@@ -120,18 +138,7 @@ class _PatientRegisterPageState extends ConsumerState<PatientRegisterPage> {
                   hintText: 'city'.tr(),
                   textInputAction: TextInputAction.next,
 
-                  fillColor: AppColors.cardBackground,
                   validator: (v) => Validators.validateRequired(v, 'city'.tr()),
-                ),
-                const SizedBox(height: 12),
-                MyTextField(
-                  controller: _ageController,
-                  hintText: 'age'.tr(),
-                  keyboardType: TextInputType.number,
-                  textInputAction: TextInputAction.next,
-
-                  fillColor: AppColors.cardBackground,
-                  validator: (v) => Validators.validateRequired(v, 'age'.tr()),
                 ),
                 const SizedBox(height: 12),
                 MyTextField(
@@ -140,9 +147,20 @@ class _PatientRegisterPageState extends ConsumerState<PatientRegisterPage> {
                   keyboardType: TextInputType.phone,
                   textInputAction: TextInputAction.next,
 
-                  fillColor: AppColors.cardBackground,
                   validator: Validators.validatePhone,
                 ),
+                const SizedBox(height: 12),
+
+                // Date of Birth picker
+                GestureDetector(
+                  onTap: _pickDate,
+                  child: MyTextField(
+                    readOnly: true,
+                    onTap: _pickDate,
+                    hintText: _age.toString(),
+                  ),
+                ),
+
                 const SizedBox(height: 12),
                 MyTextField(
                   controller: _passwordController,
@@ -150,7 +168,6 @@ class _PatientRegisterPageState extends ConsumerState<PatientRegisterPage> {
                   obscureText: true,
                   textInputAction: TextInputAction.next,
 
-                  fillColor: AppColors.cardBackground,
                   validator: Validators.validatePassword,
                 ),
                 const SizedBox(height: 12),
@@ -160,7 +177,6 @@ class _PatientRegisterPageState extends ConsumerState<PatientRegisterPage> {
                   obscureText: true,
                   textInputAction: TextInputAction.done,
 
-                  fillColor: AppColors.cardBackground,
                   validator: (v) {
                     if (v != _passwordController.text) {
                       return 'passwords_do_not_match'.tr();
@@ -169,11 +185,10 @@ class _PatientRegisterPageState extends ConsumerState<PatientRegisterPage> {
                   },
                 ),
                 const SizedBox(height: 24),
-                CustomButton(
+                AppButton.primary(
                   text: 'register'.tr(),
                   isLoading: isLoading,
-                  grideantColor: AppColors.teal,
-                  onPressed: _handleRegister,
+                  onPressed: isLoading ? null : _handleRegister,
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -183,15 +198,13 @@ class _PatientRegisterPageState extends ConsumerState<PatientRegisterPage> {
                       'already_have_an_account'.tr(),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
-                    GestureDetector(
-                      onTap: () => context.pop(),
-                      child: Text(
-                        'sign_in'.tr(),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.teal,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                    AppButton.text(
+                      text: 'sign_in'.tr(),
+                      onPressed: () => context.pop(),
+                      height: 36,
+                      textColor: AppColors.teal,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
                     ),
                   ],
                 ),

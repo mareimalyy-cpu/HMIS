@@ -2,7 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hmis/core/widgets/custom_button.dart';
+import 'package:hmis/core/widgets/app_button.dart';
 
 import '../../../core/themes/app_colors.dart';
 import '../../../gen/assets.gen.dart';
@@ -60,18 +60,16 @@ class RoleSelectionPage extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    CustomButton(
+                    AppButton.primary(
                       text: 'doctor'.tr(),
-                      grideantColor: AppColors.teal,
                       onPressed: () => context.push(
                         LoginPage.routeName,
                         extra: UserRole.doctor,
                       ),
                     ),
                     const SizedBox(height: 16),
-                    CustomButton(
+                    AppButton.primary(
                       text: 'patient'.tr(),
-                      grideantColor: AppColors.teal,
                       onPressed: () => context.push(
                         LoginPage.routeName,
                         extra: UserRole.patient,

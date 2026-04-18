@@ -6,6 +6,7 @@ class AuthStates {
   final String? errorMessage;
   final bool isAuthenticated;
   final UserRole? selectedRole;
+  final bool needsProfileCompletion;
 
   const AuthStates({
     this.currentUser,
@@ -13,6 +14,7 @@ class AuthStates {
     this.errorMessage,
     this.isAuthenticated = false,
     this.selectedRole,
+    this.needsProfileCompletion = false,
   });
 
   factory AuthStates.initial() => const AuthStates();
@@ -27,6 +29,7 @@ class AuthStates {
     String? errorMessage,
     bool? isAuthenticated,
     UserRole? selectedRole,
+    bool? needsProfileCompletion,
     bool clearError = false,
     bool clearUser = false,
   }) {
@@ -36,6 +39,8 @@ class AuthStates {
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
       selectedRole: selectedRole ?? this.selectedRole,
+      needsProfileCompletion:
+          needsProfileCompletion ?? this.needsProfileCompletion,
     );
   }
 }

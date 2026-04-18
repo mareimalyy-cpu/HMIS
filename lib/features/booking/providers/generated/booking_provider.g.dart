@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of '../auth_provider.dart';
+part of '../booking_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -9,43 +9,44 @@ part of '../auth_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(Auth)
-const authProvider = AuthProvider._();
+@ProviderFor(Booking)
+const bookingProvider = BookingProvider._();
 
-final class AuthProvider extends $AsyncNotifierProvider<Auth, AuthStates> {
-  const AuthProvider._()
+final class BookingProvider
+    extends $AsyncNotifierProvider<Booking, BookingStates> {
+  const BookingProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'authProvider',
+        name: r'bookingProvider',
         isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$authHash();
+  String debugGetCreateSourceHash() => _$bookingHash();
 
   @$internal
   @override
-  Auth create() => Auth();
+  Booking create() => Booking();
 }
 
-String _$authHash() => r'4667b0aa844825969f1ff216bf1dadcfc5a4f603';
+String _$bookingHash() => r'fef4e371c4a0a7836f39a1baf645cebd7bdaba16';
 
-abstract class _$Auth extends $AsyncNotifier<AuthStates> {
-  FutureOr<AuthStates> build();
+abstract class _$Booking extends $AsyncNotifier<BookingStates> {
+  FutureOr<BookingStates> build();
   @$mustCallSuper
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<AsyncValue<AuthStates>, AuthStates>;
+    final ref = this.ref as $Ref<AsyncValue<BookingStates>, BookingStates>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<AsyncValue<AuthStates>, AuthStates>,
-              AsyncValue<AuthStates>,
+              AnyNotifier<AsyncValue<BookingStates>, BookingStates>,
+              AsyncValue<BookingStates>,
               Object?,
               Object?
             >;

@@ -3,15 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hmis/core/services/helper.dart';
+import 'package:hmis/core/widgets/app_loading.dart';
 import 'package:hmis/generated/locale_keys.g.dart';
 
 import '../../../core/themes/app_colors.dart';
 import '../../../core/utils/validators.dart';
-import '../../../core/widgets/custom_button.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/my_text_filed.dart';
 import '../../../gen/assets.gen.dart';
 import '../models/user_model.dart';
 import '../providers/auth_provider.dart';
+import 'complete_profile_page.dart';
 import 'patient_register_page.dart';
 import 'doctor_register_page.dart';
 
@@ -48,16 +50,59 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         );
   }
 
+  void _showForgotPasswordDialog() {
+    final emailCtrl = TextEditingController(text: _emailController.text.trim());
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(
+          LocaleKeys.forgot_password.tr(),
+          textAlign: TextAlign.right,
+        ),
+        content: MyTextField(
+          controller: emailCtrl,
+          hintText: 'email'.tr(),
+          keyboardType: TextInputType.emailAddress,
+          fillColor: AppColors.cardBackground,
+        ),
+        actions: [
+          AppButton.outlined(
+            text: 'إلغاء',
+            onPressed: () => Navigator.pop(ctx),
+            height: 40,
+            width: null,
+          ),
+          AppButton.primary(
+            text: 'إرسال',
+            onPressed: () {
+              Navigator.pop(ctx);
+              ref
+                  .read(authProvider.notifier)
+                  .resetPassword(emailCtrl.text.trim());
+            },
+            height: 40,
+            width: null,
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
 
-    ref.listen(authProvider, (prev, next) {
+    ref.listen(authProvider, (_, next) {
       final state = next.value;
       if (state == null) return;
 
       if (state.errorMessage != null) {
         GlassySnackbar.showError(context, state.errorMessage!);
+      }
+
+      if (state.needsProfileCompletion && state.currentUser != null) {
+        context.push(CompleteProfilePage.routeName, extra: state.currentUser!);
+        return;
       }
 
       if (state.isAuthenticated && state.currentUser != null) {
@@ -74,104 +119,141 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     final isLoading = authState.value?.isLoading ?? false;
 
-    return Scaffold(
-      backgroundColor: AppColors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                const SizedBox(height: 60),
-                Assets.images.png.appLogo.image(height: 100),
-                const SizedBox(height: 40),
-                Text(
-                  'sign_in'.tr(),
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: AppColors.teal,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                MyTextField(
-                  controller: _emailController,
-                  hintText: 'email'.tr(),
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
-                  validator: Validators.validateEmail,
-                  fillColor: AppColors.cardBackground,
-                ),
-                const SizedBox(height: 16),
-                MyTextField(
-                  controller: _passwordController,
-                  hintText: 'password'.tr(),
-                  obscureText: _obscurePassword,
-                  textInputAction: TextInputAction.done,
-                  validator: Validators.validatePassword,
-                  fillColor: AppColors.cardBackground,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      size: 20,
-                    ),
-                    onPressed: () =>
-                        setState(() => _obscurePassword = !_obscurePassword),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {},
-                    child: Text(
-                    LocaleKeys.forgot_password.tr(),
-                      style: Theme.of(context).textTheme.bodySmall,
+    return AppLoadingOverlay(
+      isLoading: isLoading,
+      child: Scaffold(
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  const SizedBox(height: 60),
+                  Assets.images.png.appLogo.image(height: 100),
+                  const SizedBox(height: 40),
+                  Text(
+                    'sign_in'.tr(),
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: AppColors.teal,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                CustomButton(
-                  text: 'sign_in'.tr(),
-                  isLoading: isLoading,
-                  grideantColor: AppColors.teal,
-                  onPressed: _handleLogin,
-                ),
-                if (widget.role != UserRole.admin) ...[
+                  const SizedBox(height: 24),
+                  MyTextField(
+                    controller: _emailController,
+                    hintText: 'email'.tr(),
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    validator: Validators.validateEmail,
+                  ),
                   const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'dont_have_an_account'.tr(),
-                        style: Theme.of(context).textTheme.bodySmall,
+                  MyTextField(
+                    controller: _passwordController,
+                    hintText: 'password'.tr(),
+                    obscureText: _obscurePassword,
+                    textInputAction: TextInputAction.done,
+                    validator: Validators.validatePassword,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                        size: 20,
                       ),
-                      GestureDetector(
-                        onTap: () {
-                          if (widget.role == UserRole.patient) {
-                            context.push(PatientRegisterPage.routeName);
-                          } else {
-                            context.push(DoctorRegisterPage.routeName);
-                          }
-                        },
-                        child: Text(
-                          'register_now'.tr(),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.teal,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
+                      onPressed: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
+                    ),
                   ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: AppButton.text(
+                      text: LocaleKeys.forgot_password.tr(),
+                      onPressed: _showForgotPasswordDialog,
+                      height: 36,
+                      textColor: AppColors.teal,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  AppButton.primary(
+                    text: 'sign_in'.tr(),
+                    isLoading: isLoading,
+                    onPressed: isLoading ? null : _handleLogin,
+                  ),
+
+                  // Google sign-in — only for non-admin roles
+                  if (widget.role != UserRole.admin) ...[
+                    const SizedBox(height: 12),
+                    _OrDivider(),
+                    const SizedBox(height: 12),
+                    AppButton.outlined(
+                      text: 'تسجيل الدخول بـ Google',
+                      onPressed: isLoading
+                          ? null
+                          : () => ref
+                                .read(authProvider.notifier)
+                                .loginWithGoogle(),
+                      icon: Icons.g_mobiledata_rounded,
+                      fontSize: 14,
+                    ),
+                  ],
+
+                  // Register link — only for non-admin roles
+                  if (widget.role != UserRole.admin) ...[
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'dont_have_an_account'.tr(),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        AppButton.text(
+                          text: 'register_now'.tr(),
+                          onPressed: () {
+                            if (widget.role == UserRole.patient) {
+                              context.push(PatientRegisterPage.routeName);
+                            } else {
+                              context.push(DoctorRegisterPage.routeName);
+                            }
+                          },
+                          height: 36,
+                          textColor: AppColors.teal,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _OrDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Expanded(child: Divider()),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            'أو',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.grey),
+          ),
+        ),
+        const Expanded(child: Divider()),
+      ],
     );
   }
 }

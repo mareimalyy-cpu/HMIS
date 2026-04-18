@@ -14,10 +14,21 @@ class AppColors {
   static const Color warning = Color(0xFFFB8C00);
   static const Color info = Color(0xFF2E7D32);
 
-  // Dark mode variants
+  // Light theme
+  static const Color lightBackground = Color(0xFFF5F7FA);
+  static const Color lightSurface = Color(0xFFFFFFFF);
+  static const Color lightDivider = Color(0xFFE0E0E0);
+  static const Color lightError = Color(0xFFE53935);
+  static const Color lightTextSecondary = Color(0xFF757575);
+
+  // Dark theme
   static const Color darkSurface = Color(0xFF1E1E1E);
   static const Color darkCard = Color(0xFF2C2C2C);
   static const Color darkBackground = Color(0xFF121212);
+  static const Color darkText = Color(0xFFFFFFFF);
+  static const Color darkDivider = Color(0xFF2C2C2C);
+  static const Color darkError = Color(0xFFE53935);
+  static const Color darkTextSecondary = Color(0xFF9E9E9E);
 
   // Adaptive helpers
   static Color card(BuildContext context) =>

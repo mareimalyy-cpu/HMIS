@@ -2,8 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/themes/app_colors.dart';
-import '../../../core/widgets/custom_button.dart';
+import '../../../core/widgets/app_button.dart';
 
 class BookingSuccessPage extends StatelessWidget {
   static const routeName = '/booking-success';
@@ -32,9 +31,8 @@ class BookingSuccessPage extends StatelessWidget {
                     ),
               ),
               const SizedBox(height: 40),
-              CustomButton(
+              AppButton.primary(
                 text: 'back_to_home'.tr(),
-                grideantColor: AppColors.teal,
                 onPressed: () => context.go('/patient-home'),
               ),
             ],

@@ -12,4 +12,6 @@ enum Constants {
   users,
   role,
   specialty,
+  specialties,
+  appointments,
 }

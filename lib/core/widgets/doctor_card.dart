@@ -15,13 +15,23 @@ class DoctorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
+    final cardColor = isDark
+        ? colorScheme.surfaceContainerHighest
+        : AppColors.cardBackground;
+    final ratingBgColor = isDark ? colorScheme.surface : AppColors.white;
+    final accentColor = isDark ? AppColors.tealLight : AppColors.teal;
+    final subtleColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
+    final avatarBgColor = isDark ? Colors.grey[700]! : Colors.grey[300]!;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: AppColors.cardBackground,
+          color: cardColor,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -30,7 +40,7 @@ class DoctorCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColors.white,
+                color: ratingBgColor,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -55,14 +65,14 @@ class DoctorCard extends StatelessWidget {
                 Text(
                   doctor.name,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.teal,
+                        color: accentColor,
                         fontWeight: FontWeight.bold,
                       ),
                 ),
                 Text(
                   doctor.specialty ?? '',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
+                        color: subtleColor,
                       ),
                 ),
               ],
@@ -71,7 +81,7 @@ class DoctorCard extends StatelessWidget {
             // Avatar
             CircleAvatar(
               radius: 28,
-              backgroundColor: Colors.grey[300],
+              backgroundColor: avatarBgColor,
               backgroundImage: doctor.imageUrl != null
                   ? NetworkImage(doctor.imageUrl!)
                   : null,

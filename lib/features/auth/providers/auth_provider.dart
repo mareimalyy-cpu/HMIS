@@ -40,26 +40,13 @@ class Auth extends _$Auth {
   }
 
   void selectRole(UserRole role) {
-    state = AsyncData(state.value!.copyWith(
-      selectedRole: role,
-      clearError: true,
-    ));
+    state = AsyncData(state.value!.copyWith(selectedRole: role, clearError: true));
   }
 
-  Future<void> login({
-    required String email,
-    required String password,
-  }) async {
-    state = AsyncData(state.value!.copyWith(
-      isLoading: true,
-      clearError: true,
-    ));
-
+  Future<void> login({required String email, required String password}) async {
+    state = AsyncData(state.value!.copyWith(isLoading: true, clearError: true));
     try {
-      final user = await _remoteService.login(
-        email: email,
-        password: password,
-      );
+      final user = await _remoteService.login(email: email, password: password);
       unawaited(_localService.saveUser(user));
       state = AsyncData(AuthStates(
         currentUser: user,
@@ -75,6 +62,63 @@ class Auth extends _$Auth {
     }
   }
 
+  Future<void> loginWithGoogle() async {
+    state = AsyncData(state.value!.copyWith(isLoading: true, clearError: true));
+    try {
+      final user = await _remoteService.loginWithGoogle();
+      final isIncomplete = user.phone.isEmpty || user.city.isEmpty;
+      if (isIncomplete) {
+        state = AsyncData(AuthStates(
+          currentUser: user,
+          isAuthenticated: false,
+          needsProfileCompletion: true,
+          selectedRole: user.role,
+        ));
+      } else {
+        unawaited(_localService.saveUser(user));
+        state = AsyncData(AuthStates(
+          currentUser: user,
+          isAuthenticated: true,
+          selectedRole: user.role,
+        ));
+      }
+    } catch (e) {
+      log('Google login error: $e');
+      state = AsyncData(state.value!.copyWith(
+        isLoading: false,
+        errorMessage: _mapFirebaseError(e),
+      ));
+    }
+  }
+
+  Future<void> completeGoogleProfile({
+    required String phone,
+    required String city,
+    required int age,
+  }) async {
+    state = AsyncData(state.value!.copyWith(isLoading: true, clearError: true));
+    try {
+      final updated = state.value!.currentUser!.copyWith(
+        phone: phone,
+        city: city,
+        age: age,
+      );
+      await _remoteService.updateUser(updated);
+      unawaited(_localService.saveUser(updated));
+      state = AsyncData(AuthStates(
+        currentUser: updated,
+        isAuthenticated: true,
+        selectedRole: updated.role,
+      ));
+    } catch (e) {
+      log('Complete profile error: $e');
+      state = AsyncData(state.value!.copyWith(
+        isLoading: false,
+        errorMessage: _mapFirebaseError(e),
+      ));
+    }
+  }
+
   Future<void> registerPatient({
     required String name,
     required String email,
@@ -83,11 +127,7 @@ class Auth extends _$Auth {
     required String city,
     required int age,
   }) async {
-    state = AsyncData(state.value!.copyWith(
-      isLoading: true,
-      clearError: true,
-    ));
-
+    state = AsyncData(state.value!.copyWith(isLoading: true, clearError: true));
     try {
       final user = await _remoteService.registerPatient(
         name: name,
@@ -121,11 +161,7 @@ class Auth extends _$Auth {
     required String hospital,
     required String hospitalAddress,
   }) async {
-    state = AsyncData(state.value!.copyWith(
-      isLoading: true,
-      clearError: true,
-    ));
-
+    state = AsyncData(state.value!.copyWith(isLoading: true, clearError: true));
     try {
       final user = await _remoteService.registerDoctor(
         name: name,
@@ -144,6 +180,20 @@ class Auth extends _$Auth {
       ));
     } catch (e) {
       log('Register doctor error: $e');
+      state = AsyncData(state.value!.copyWith(
+        isLoading: false,
+        errorMessage: _mapFirebaseError(e),
+      ));
+    }
+  }
+
+  Future<void> resetPassword(String email) async {
+    state = AsyncData(state.value!.copyWith(isLoading: true, clearError: true));
+    try {
+      await _remoteService.resetPassword(email);
+      state = AsyncData(state.value!.copyWith(isLoading: false));
+    } catch (e) {
+      log('Reset password error: $e');
       state = AsyncData(state.value!.copyWith(
         isLoading: false,
         errorMessage: _mapFirebaseError(e),
@@ -178,20 +228,26 @@ class Auth extends _$Auth {
   }
 
   String _mapFirebaseError(Object e) {
-    final message = e.toString();
-    if (message.contains('user-not-found')) {
-      return 'No account found with this email';
-    } else if (message.contains('wrong-password')) {
-      return 'Incorrect password';
-    } else if (message.contains('email-already-in-use')) {
-      return 'This email is already registered';
-    } else if (message.contains('weak-password')) {
-      return 'Password is too weak';
-    } else if (message.contains('invalid-email')) {
-      return 'Invalid email address';
-    } else if (message.contains('network-request-failed')) {
-      return 'Network error, please check your connection';
+    final msg = e.toString();
+    if (msg.contains('user-not-found') || msg.contains('invalid-credential')) {
+      return 'لا يوجد حساب مرتبط بهذا البريد الإلكتروني';
+    } else if (msg.contains('wrong-password')) {
+      return 'كلمة المرور غير صحيحة';
+    } else if (msg.contains('email-already-in-use')) {
+      return 'البريد الإلكتروني مستخدم بالفعل';
+    } else if (msg.contains('weak-password')) {
+      return 'كلمة المرور ضعيفة جداً';
+    } else if (msg.contains('invalid-email')) {
+      return 'البريد الإلكتروني غير صحيح';
+    } else if (msg.contains('network-request-failed')) {
+      return 'خطأ في الاتصال بالإنترنت';
+    } else if (msg.contains('sign_in_cancelled') || msg.contains('cancelled')) {
+      return 'تم إلغاء تسجيل الدخول';
+    } else if (msg.contains('too-many-requests')) {
+      return 'محاولات كثيرة، يرجى المحاولة لاحقاً';
+    } else if (msg.contains('User not found')) {
+      return 'المستخدم غير موجود في قاعدة البيانات';
     }
-    return 'An unexpected error occurred';
+    return 'حدث خطأ غير متوقع';
   }
 }

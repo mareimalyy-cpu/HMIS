@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../features/admin_home/views/admin_patient_detail_page.dart';
 import '../../../features/admin_home/views/admin_shell_page.dart';
 import '../../../features/auth/models/user_model.dart';
+import '../../../features/auth/views/complete_profile_page.dart';
 import '../../../features/auth/views/doctor_register_page.dart';
 import '../../../features/auth/views/login_page.dart';
 import '../../../features/auth/views/patient_register_page.dart';
@@ -17,6 +18,7 @@ import '../../../features/patient_home/models/specialty_model.dart';
 import '../../../features/patient_home/views/patient_shell_page.dart';
 import '../../../features/doctor_home/views/doctor_shell_page.dart';
 import '../../../features/settings/views/settings_page.dart';
+
 import '../../enum/constants.dart';
 import '../../local_services/local_storage.dart';
 import '../app_routing_base.dart';
@@ -65,6 +67,13 @@ class MobileRouting extends AppRoutingBase {
           builder: (context, state) {
             final role = state.extra as UserRole? ?? UserRole.patient;
             return LoginPage(role: role);
+          },
+        ),
+        GoRoute(
+          path: CompleteProfilePage.routeName,
+          builder: (context, state) {
+            final user = state.extra as UserModel;
+            return CompleteProfilePage(user: user);
           },
         ),
         GoRoute(
@@ -147,9 +156,23 @@ class MobileRouting extends AppRoutingBase {
   }
 
   static String _getInitialRoute() {
-    final hideOnboarding =
-        LocalStorage.instance.get(Constants.hideOnboarding.name) == true;
+    final storage = LocalStorage.instance;
+
+    final hideOnboarding = storage.get(Constants.hideOnboarding.name) == true;
     if (!hideOnboarding) return OnboardingPage.routeName;
+
+    final roleStr = storage.get(Constants.userRole.name) as String?;
+    if (roleStr != null) {
+      switch (UserRole.fromString(roleStr)) {
+        case UserRole.patient:
+          return PatientShellPage.routeName;
+        case UserRole.doctor:
+          return DoctorShellPage.routeName;
+        case UserRole.admin:
+          return AdminShellPage.routeName;
+      }
+    }
+
     return RoleSelectionPage.routeName;
   }
 }

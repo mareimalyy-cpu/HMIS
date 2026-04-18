@@ -7,6 +7,7 @@ import 'package:hmis/generated/locale_keys.g.dart';
 import '../../../core/enum/constants.dart';
 import '../../../core/local_services/local_storage.dart';
 import '../../../core/themes/app_colors.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../gen/assets.gen.dart';
 import '../../auth/views/role_selection_page.dart';
 
@@ -66,15 +67,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
               alignment: AlignmentDirectional.topEnd,
               child: Padding(
                 padding: const EdgeInsets.all(16),
-                child: TextButton(
+                child: AppButton.text(
+                  text: 'skip'.tr(),
                   onPressed: _completeOnboarding,
-                  child: Text(
-                    'skip'.tr(),
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: AppColors.teal,
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
+                  height: 36,
+                  width: 60,
+                  textColor: AppColors.teal,
                 ),
               ),
             ),

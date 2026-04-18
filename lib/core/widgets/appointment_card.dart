@@ -17,13 +17,21 @@ class AppointmentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark
+        ? Theme.of(context).colorScheme.surfaceContainerHighest
+        : AppColors.cardBackground;
+    final accentColor = isDark ? AppColors.tealLight : AppColors.teal;
+    final subtleColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
+    final avatarBgColor = isDark ? Colors.grey[700]! : Colors.grey[300]!;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: AppColors.cardBackground,
+          color: cardColor,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -32,7 +40,7 @@ class AppointmentCard extends StatelessWidget {
             Text(
               showDate ? appointment.date : '#${appointment.number}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
+                    color: subtleColor,
                   ),
             ),
             const Spacer(),
@@ -43,14 +51,14 @@ class AppointmentCard extends StatelessWidget {
                 Text(
                   appointment.patientName,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.teal,
+                        color: accentColor,
                         fontWeight: FontWeight.bold,
                       ),
                 ),
                 Text(
                   appointment.time,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
+                        color: subtleColor,
                       ),
                 ),
               ],
@@ -59,7 +67,7 @@ class AppointmentCard extends StatelessWidget {
             // Avatar
             CircleAvatar(
               radius: 24,
-              backgroundColor: Colors.grey[300],
+              backgroundColor: avatarBgColor,
               backgroundImage: appointment.patientImageUrl != null
                   ? NetworkImage(appointment.patientImageUrl!)
                   : null,

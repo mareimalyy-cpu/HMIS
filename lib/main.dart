@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hmis/core/helper/help_functions.dart';
 import 'package:responsive_framework/responsive_framework.dart';
@@ -36,6 +37,19 @@ Future<void> firstInit() async {
   } catch (e) {
     debugPrint('firebase_initialization_etostring'.tr());
   }
+  try {
+    await GoogleSignIn.instance.initialize(
+      serverClientId:
+          '594079591247-un7h4qctt5qgc8vj5eg3o8ehp5cfam4j.apps.googleusercontent.com',
+    );
+  } catch (e) {
+    log('Google Sign-In init error: $e');
+  }
+  // try {
+  //   await PatientHomeRemoteService().seedSpecialties();
+  // } catch (e) {
+  //   log('Seed specialties error: $e');
+  // }
   try {
     await NotificationInitializer.instance.init();
   } catch (e) {
@@ -95,8 +109,8 @@ class MyApp extends ConsumerWidget {
             supportedLocales: context.supportedLocales,
             locale: context.locale,
             themeMode: Thememode.fromThememode(themeMode),
-            theme: getLightTheme(fontFamily: fontFamily),
-            darkTheme: getDarkTheme(fontFamily: fontFamily),
+            theme: AppTheme.lightTheme(fontFamily: fontFamily),
+            darkTheme: AppTheme.darkTheme(fontFamily: fontFamily),
             routerConfig: Routes.instance.getRoutes(),
             builder: (context, child) {
               return ResponsiveScaledBox(
