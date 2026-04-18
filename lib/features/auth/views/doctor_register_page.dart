@@ -8,11 +8,10 @@ import '../../../core/themes/app_colors.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/my_text_filed.dart';
-import '../../../core/widgets/search_field.dart';
 import '../../../gen/assets.gen.dart';
 import '../../patient_home/models/specialty_model.dart';
-import '../../patient_home/providers/specialties_provider.dart';
 import '../providers/auth_provider.dart';
+import 'widgets/specialty.dart';
 
 class DoctorRegisterPage extends ConsumerStatefulWidget {
   static const routeName = '/doctor-register';
@@ -48,10 +47,6 @@ class _DoctorRegisterPageState extends ConsumerState<DoctorRegisterPage> {
 
   void _handleRegister() {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedSpecialty == null) {
-      GlassySnackbar.showError(context, 'يرجى اختيار التخصص');
-      return;
-    }
     ref
         .read(authProvider.notifier)
         .registerDoctor(
@@ -65,29 +60,9 @@ class _DoctorRegisterPageState extends ConsumerState<DoctorRegisterPage> {
         );
   }
 
-  Future<void> _showSpecialtyPicker(List<SpecialtyModel> specialties) async {
-    final lang = EasyLocalization.of(context)?.locale.languageCode ?? 'ar';
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => _SpecialtyPickerSheet(
-        specialties: specialties,
-        languageCode: lang,
-        onSelected: (s) {
-          setState(() => _selectedSpecialty = s);
-          Navigator.pop(ctx);
-        },
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-    final specialtiesAsync = ref.watch(specialtiesProvider);
-    final lang = EasyLocalization.of(context)?.locale.languageCode ?? 'ar';
-
     ref.listen(authProvider, (_, next) {
       final state = next.value;
       if (state == null) return;
@@ -100,7 +75,6 @@ class _DoctorRegisterPageState extends ConsumerState<DoctorRegisterPage> {
     });
 
     final isLoading = authState.value?.isLoading ?? false;
-    final specialties = specialtiesAsync.value ?? SpecialtyModel.defaults;
 
     return Scaffold(
       body: SafeArea(
@@ -144,54 +118,10 @@ class _DoctorRegisterPageState extends ConsumerState<DoctorRegisterPage> {
                 ),
 
                 // Specialty picker
-                GestureDetector(
-                  onTap: specialtiesAsync.isLoading
-                      ? null
-                      : () => _showSpecialtyPicker(specialties),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
-                    ),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.medical_services_outlined,
-                          size: 18,
-                          color: _selectedSpecialty != null
-                              ? AppColors.teal
-                              : Colors.grey,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            _selectedSpecialty == null
-                                ? 'specialty'.tr()
-                                : _selectedSpecialty!.localizedName(lang),
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  color: _selectedSpecialty != null
-                                      ? null
-                                      : Colors.grey,
-                                ),
-                          ),
-                        ),
-                        if (specialtiesAsync.isLoading)
-                          const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        else
-                          Icon(Icons.arrow_drop_down, color: Colors.grey[600]),
-                      ],
-                    ),
-                  ),
+                Specialty(
+                  value: _selectedSpecialty,
+                  onSelected: (s) => setState(() => _selectedSpecialty = s),
+                  validator: (v) => v == null ? 'يرجى اختيار التخصص' : null,
                 ),
 
                 MyTextField(
@@ -256,121 +186,6 @@ class _DoctorRegisterPageState extends ConsumerState<DoctorRegisterPage> {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _SpecialtyPickerSheet extends StatefulWidget {
-  final List<SpecialtyModel> specialties;
-  final String languageCode;
-  final ValueChanged<SpecialtyModel> onSelected;
-
-  const _SpecialtyPickerSheet({
-    required this.specialties,
-    required this.languageCode,
-    required this.onSelected,
-  });
-
-  @override
-  State<_SpecialtyPickerSheet> createState() => _SpecialtyPickerSheetState();
-}
-
-class _SpecialtyPickerSheetState extends State<_SpecialtyPickerSheet> {
-  final _searchController = TextEditingController();
-  String _query = '';
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final filtered = widget.specialties.where((s) {
-      if (_query.isEmpty) return true;
-      final q = _query.toLowerCase();
-      return s.nameAr.toLowerCase().contains(q) ||
-          s.nameEn.toLowerCase().contains(q);
-    }).toList();
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 12),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              'specialty'.tr(),
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.teal,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: SearchField(
-              controller: _searchController,
-              hintText: 'search'.tr(),
-              onChanged: (q) => setState(() => _query = q),
-            ),
-          ),
-          const SizedBox(height: 8),
-          ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.5,
-            ),
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: filtered.length,
-              itemBuilder: (context, index) {
-                final specialty = filtered[index];
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: specialty.color.withValues(alpha: 0.2),
-                    child: Icon(
-                      Icons.medical_services_outlined,
-                      color: specialty.color,
-                      size: 20,
-                    ),
-                  ),
-                  title: Text(specialty.localizedName(widget.languageCode)),
-                  subtitle: widget.languageCode == 'ar'
-                      ? Text(
-                          specialty.nameEn,
-                          style: const TextStyle(fontSize: 12),
-                        )
-                      : Text(
-                          specialty.nameAr,
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                  onTap: () => widget.onSelected(specialty),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 16),
-        ],
       ),
     );
   }

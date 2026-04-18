@@ -95,6 +95,7 @@ class Auth extends _$Auth {
     required String phone,
     required String city,
     required int age,
+    String? specialty,
   }) async {
     state = AsyncData(state.value!.copyWith(isLoading: true, clearError: true));
     try {
@@ -102,6 +103,7 @@ class Auth extends _$Auth {
         phone: phone,
         city: city,
         age: age,
+        specialty: specialty,
       );
       await _remoteService.updateUser(updated);
       unawaited(_localService.saveUser(updated));

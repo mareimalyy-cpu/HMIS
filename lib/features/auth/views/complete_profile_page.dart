@@ -9,8 +9,10 @@ import '../../../core/themes/app_colors.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/my_text_filed.dart';
+import '../../patient_home/models/specialty_model.dart';
 import '../models/user_model.dart';
 import '../providers/auth_provider.dart';
+import 'widgets/specialty.dart';
 
 class CompleteProfilePage extends ConsumerStatefulWidget {
   static const routeName = '/complete-profile';
@@ -28,6 +30,9 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
   late final TextEditingController _phoneCtrl;
   late final TextEditingController _cityCtrl;
   DateTime? _birthDate;
+  SpecialtyModel? _selectedSpecialty;
+
+  bool get _isDoctor => widget.user.role == UserRole.doctor;
 
   @override
   void initState() {
@@ -78,12 +83,14 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
       GlassySnackbar.showError(context, 'يرجى اختيار تاريخ الميلاد');
       return;
     }
+
     ref
         .read(authProvider.notifier)
         .completeGoogleProfile(
           phone: _phoneCtrl.text.trim(),
           city: _cityCtrl.text.trim(),
           age: _age,
+          specialty: _isDoctor ? _selectedSpecialty!.id : null,
         );
   }
 
@@ -167,7 +174,6 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                   hintText: 'phone'.tr(),
                   keyboardType: TextInputType.phone,
                   textInputAction: TextInputAction.next,
-
                   validator: Validators.validatePhone,
                 ),
                 const SizedBox(height: 12),
@@ -175,7 +181,6 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                   controller: _cityCtrl,
                   hintText: 'city'.tr(),
                   textInputAction: TextInputAction.done,
-
                   validator: (v) => Validators.validateRequired(v, 'city'.tr()),
                 ),
                 const SizedBox(height: 12),
@@ -186,6 +191,15 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                   onTap: _pickDate,
                   hintText: _age == 0 ? LocaleKeys.age.tr() : _age.toString(),
                 ),
+
+                if (_isDoctor) ...[
+                  const SizedBox(height: 12),
+                  Specialty(
+                    value: _selectedSpecialty,
+                    onSelected: (s) => setState(() => _selectedSpecialty = s),
+                    validator: (v) => v == null ? 'يرجى اختيار التخصص' : null,
+                  ),
+                ],
 
                 const SizedBox(height: 32),
                 AppButton.primary(
