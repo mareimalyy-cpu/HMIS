@@ -42,7 +42,9 @@ class DoctorDetailsPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        LocaleKeys.dr_doctorname.tr(),
+                        LocaleKeys.dr_doctorname.tr(
+                          namedArgs: {'name': doctor.name},
+                        ),
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),

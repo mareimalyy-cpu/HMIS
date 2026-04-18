@@ -10,10 +10,10 @@ part of '../admin_provider.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(Admin)
-const adminProvider = AdminProvider._();
+final adminProvider = AdminProvider._();
 
 final class AdminProvider extends $AsyncNotifierProvider<Admin, AdminStates> {
-  const AdminProvider._()
+  AdminProvider._()
     : super(
         from: null,
         argument: null,
@@ -39,7 +39,6 @@ abstract class _$Admin extends $AsyncNotifier<AdminStates> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<AsyncValue<AdminStates>, AdminStates>;
     final element =
         ref.element
@@ -49,6 +48,6 @@ abstract class _$Admin extends $AsyncNotifier<AdminStates> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }

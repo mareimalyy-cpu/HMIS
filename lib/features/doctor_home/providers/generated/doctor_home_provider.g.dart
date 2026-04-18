@@ -10,11 +10,11 @@ part of '../doctor_home_provider.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(DoctorHome)
-const doctorHomeProvider = DoctorHomeProvider._();
+final doctorHomeProvider = DoctorHomeProvider._();
 
 final class DoctorHomeProvider
     extends $AsyncNotifierProvider<DoctorHome, DoctorHomeStates> {
-  const DoctorHomeProvider._()
+  DoctorHomeProvider._()
     : super(
         from: null,
         argument: null,
@@ -40,7 +40,6 @@ abstract class _$DoctorHome extends $AsyncNotifier<DoctorHomeStates> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref =
         this.ref as $Ref<AsyncValue<DoctorHomeStates>, DoctorHomeStates>;
     final element =
@@ -51,6 +50,6 @@ abstract class _$DoctorHome extends $AsyncNotifier<DoctorHomeStates> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
