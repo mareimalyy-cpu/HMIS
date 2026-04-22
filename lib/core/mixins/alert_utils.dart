@@ -393,17 +393,6 @@ mixin AlertUtils {
 
 // Alert configuration class
 class _AlertConfig {
-  final IconData icon;
-  final Color iconColor;
-  final Color iconBackgroundColor;
-  final Color textColor;
-  final Color borderColor;
-  final LinearGradient gradient;
-  final Color shadowColor;
-  final Color confirmButtonColor;
-  final Color confirmTextColor;
-  final Color cancelButtonColor;
-  final Color cancelTextColor;
 
   _AlertConfig({
     required this.icon,
@@ -418,4 +407,15 @@ class _AlertConfig {
     required this.cancelButtonColor,
     required this.cancelTextColor,
   });
+  final IconData icon;
+  final Color iconColor;
+  final Color iconBackgroundColor;
+  final Color textColor;
+  final Color borderColor;
+  final LinearGradient gradient;
+  final Color shadowColor;
+  final Color confirmButtonColor;
+  final Color confirmTextColor;
+  final Color cancelButtonColor;
+  final Color cancelTextColor;
 }

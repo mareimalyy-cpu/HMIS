@@ -22,10 +22,10 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 class FirebaseMessagingService {
-  static final FirebaseMessagingService instance =
-      FirebaseMessagingService._internal();
   factory FirebaseMessagingService() => instance;
   FirebaseMessagingService._internal();
+  static final FirebaseMessagingService instance =
+      FirebaseMessagingService._internal();
 
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
 
@@ -94,7 +94,7 @@ class FirebaseMessagingService {
     return _notificationsEnabled;
   }
 
-  Future<void> toogle(bool toogle) async {
+  Future<void> toogle({required bool toogle}) async {
     if (toogle) {
       await enableNotifications();
     } else {
@@ -130,7 +130,7 @@ class FirebaseMessagingService {
   }
 
   // ================= NAVIGATION =================
-  void _handleMessage(RemoteMessage message) async {
+  Future<void> _handleMessage(RemoteMessage message) async {
     final handle = DeepLinkHelper.instance;
     if (message.data.isNotEmpty) {
       log('🧭 Open screen from notification: ${message.data}');

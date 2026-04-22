@@ -2,26 +2,28 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hmis/core/services/helper.dart';
-import 'package:hmis/core/widgets/app_loading.dart';
-import 'package:hmis/generated/locale_keys.g.dart';
 
+import '../../../core/services/helper.dart';
 import '../../../core/themes/app_colors.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_loading.dart';
 import '../../../core/widgets/my_text_filed.dart';
 import '../../../gen/assets.gen.dart';
-import '../models/user_model.dart';
-import '../providers/auth_provider.dart';
+import '../../../generated/locale_keys.g.dart';
+import '../data/models/user_model.dart';
+import '../presentation/providers/auth_provider.dart';
+import '../presentation/screens/doctor_register_page.dart';
+import '../presentation/screens/patient_register_page.dart';
+import '../presentation/screens/pending_approval_page.dart';
 import 'complete_profile_page.dart';
-import 'patient_register_page.dart';
-import 'doctor_register_page.dart';
+
 
 class LoginPage extends ConsumerStatefulWidget {
+  const LoginPage({required this.role, super.key});
   static const routeName = '/login';
 
   final UserRole role;
-  const LoginPage({super.key, required this.role});
 
   @override
   ConsumerState<LoginPage> createState() => _LoginPageState();
@@ -101,18 +103,27 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       }
 
       if (state.needsProfileCompletion && state.currentUser != null) {
-        context.push(CompleteProfilePage.routeName, extra: state.currentUser!);
+        context.push(CompleteProfilePage.routeName);
+        return;
+      }
+
+      // Pending doctor — cannot access app yet
+      if (state.isPendingApproval && state.currentUser != null) {
+        context.go(PendingApprovalPage.routeName);
         return;
       }
 
       if (state.isAuthenticated && state.currentUser != null) {
         final role = state.currentUser!.role;
-        if (role == UserRole.doctor) {
-          context.go('/doctor-home');
-        } else if (role == UserRole.admin) {
-          context.go('/admin-home');
-        } else {
-          context.go('/patient-home');
+        switch (role) {
+          case UserRole.doctor:
+            context.go('/doctor-home');
+          case UserRole.admin:
+            context.go('/admin-home');
+          case UserRole.receptionist:
+            context.go('/receptionist-home');
+          case UserRole.patient:
+            context.go('/patient-home');
         }
       }
     });

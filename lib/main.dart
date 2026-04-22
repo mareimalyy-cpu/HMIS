@@ -6,10 +6,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hmis/core/helper/help_functions.dart';
+import 'core/helper/help_functions.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 
 import 'core/constants.dart';
+import 'features/attachments/data/services/supabase_storage_service.dart';
 import 'core/extension/theme_mode.dart';
 import 'core/local_services/local_storage.dart';
 import 'core/notifications/notification_initializer.dart';
@@ -17,7 +18,7 @@ import 'core/router/index.dart';
 import 'core/services/life_cycle_manager.dart';
 import 'core/services/scroll_behavior.dart';
 import 'core/themes/style.dart';
-import 'features/settings/providers/settings_provider.dart';
+import 'features/settings/presentation/providers/settings_provider.dart';
 import 'firebase_options.dart';
 import 'generated/codegen_loader.g.dart';
 
@@ -50,6 +51,11 @@ Future<void> firstInit() async {
   // } catch (e) {
   //   log('Seed specialties error: $e');
   // }
+  try {
+    await SupabaseStorageService.initialize();
+  } catch (e) {
+    log('Supabase init error: $e');
+  }
   try {
     await NotificationInitializer.instance.init();
   } catch (e) {
@@ -96,9 +102,9 @@ class MyApp extends ConsumerWidget {
       onTap: unfocusCurrent,
       child: ResponsiveBreakpoints(
         breakpoints: [
-          Breakpoint(start: 0, end: 600, name: MOBILE),
-          Breakpoint(start: 601, end: 1200, name: TABLET),
-          Breakpoint(start: 1201, end: double.infinity, name: DESKTOP),
+          const Breakpoint(start: 0, end: 600, name: MOBILE),
+          const Breakpoint(start: 601, end: 1200, name: TABLET),
+          const Breakpoint(start: 1201, end: double.infinity, name: DESKTOP),
         ],
         child: LifeCycleManager(
           child: MaterialApp.router(

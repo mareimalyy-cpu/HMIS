@@ -4,8 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/themes/app_colors.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/section_app_bar.dart';
-import '../../auth/providers/auth_provider.dart';
+import '../../../generated/locale_keys.g.dart';
+import '../../auth/presentation/providers/auth_provider.dart';
+import '../../auth/views/edit_profile_page.dart';
+import '../../time_slots/views/time_slots_page.dart';
 
 class DoctorProfilePage extends ConsumerWidget {
   const DoctorProfilePage({super.key});
@@ -14,21 +18,16 @@ class DoctorProfilePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final accentColor = isDark ? AppColors.tealLight : AppColors.teal;
-    final cardColor = isDark
-        ? Theme.of(context).colorScheme.surfaceContainerHighest
-        : AppColors.cardBackground;
-    final iconColor = isDark ? accentColor : AppColors.primary;
 
     return Scaffold(
       appBar: SectionAppBar(
-        title: 'doctor_profile'.tr(),
+        title: LocaleKeys.doctor_profile.tr(),
         showBackButton: false,
         actions: [
           IconButton(
             onPressed: () => context.push('/settings'),
             icon: Icon(
-              Icons.settings,
+              Icons.settings_rounded,
               color: isDark ? Colors.white70 : AppColors.white,
             ),
           ),
@@ -36,182 +35,103 @@ class DoctorProfilePage extends ConsumerWidget {
       ),
       body: authState.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('error_e'.tr())),
+        error: (e, _) => Center(child: Text(LocaleKeys.error_e.tr())),
         data: (state) {
           final user = state.currentUser;
           if (user == null) {
-            return  Center(child: Text('not_logged_in'.tr()));
+            return Center(child: Text(LocaleKeys.not_logged_in.tr()));
           }
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Doctor Header
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            'dr_username'.tr(namedArgs: {
-                              'name': user.name
-                            }),
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Text(
-                                user.specialty ?? '',
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ),
-                              const SizedBox(width: 8),
-                              const Icon(
-                                  Icons.star, color: Colors.amber, size: 18),
-                              Text(
-                                '${user.rating?.toInt() ?? 0}',
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundColor:
-                          isDark ? Colors.grey[700] : Colors.grey[300],
-                      backgroundImage: user.imageUrl != null
-                          ? NetworkImage(user.imageUrl!)
-                          : null,
-                      child: user.imageUrl == null
-                          ? const Icon(Icons.person,
-                              size: 50, color: Colors.white)
-                          : null,
-                    ),
-                  ],
-                ),
+                // ── Hero header ────────────────────────────────────────────
+                _ProfileHeader(user: user, isDark: isDark),
 
                 const SizedBox(height: 20),
 
-                // Bio
-                Text(
-                  'about'.tr(),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                // ── Edit profile button ────────────────────────────────────
+                AppButton.outlined(
+                  text: LocaleKeys.edit_profile.tr(),
+                  icon: Icons.edit_rounded,
+                  height: 46,
+                  onPressed: () => context.push(EditProfilePage.routeName),
                 ),
+
+                const SizedBox(height: 24),
+
+                // ── Bio ────────────────────────────────────────────────────
+                _SectionLabel(LocaleKeys.about.tr()),
                 const SizedBox(height: 8),
-                Text(
-                  user.bio ?? 'no_bio_available'.tr(),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: isDark ? Colors.grey[400] : Colors.grey[600],
-                      ),
+                _InfoCard(
+                  child: Text(
+                    user.bio?.isNotEmpty == true
+                        ? user.bio!
+                        : LocaleKeys.no_bio_available.tr(),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          height: 1.6,
+                        ),
+                  ),
                 ),
 
                 const SizedBox(height: 20),
 
-                // Schedule Card
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: cardColor,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                // ── Work schedule info ─────────────────────────────────────
+                _SectionLabel(LocaleKeys.work_schedule.tr()),
+                const SizedBox(height: 8),
+                _InfoCard(
                   child: Column(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(
-                            user.workDays?.join(', ') ?? 'not_specified'.tr(),
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(
-                                  color: isDark
-                                      ? Colors.grey[400]
-                                      : Colors.grey[600],
-                                ),
-                          ),
-                        ],
+                      _InfoRow(
+                        icon: Icons.calendar_today_rounded,
+                        text: user.workDays?.join(', ') ??
+                            LocaleKeys.not_specified.tr(),
                       ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(
-                            '${user.workHoursStart ?? ''} - ${user.workHoursEnd ?? ''}',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                          const SizedBox(width: 8),
-                          const Icon(Icons.access_time, size: 20),
-                        ],
+                      const SizedBox(height: 10),
+                      _InfoRow(
+                        icon: Icons.access_time_rounded,
+                        text:
+                            '${user.workHoursStart ?? '--'} – ${user.workHoursEnd ?? '--'}',
                       ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              user.hospitalAddress ?? '',
-                              textAlign: TextAlign.right,
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Icon(Icons.location_on, size: 20),
-                        ],
+                      const SizedBox(height: 10),
+                      _InfoRow(
+                        icon: Icons.location_on_rounded,
+                        text: user.hospitalAddress?.isNotEmpty == true
+                            ? user.hospitalAddress!
+                            : LocaleKeys.not_specified.tr(),
                       ),
                     ],
                   ),
                 ),
 
+                const SizedBox(height: 12),
+
+                // ── Manage time slots ──────────────────────────────────────
+                AppButton.ghost(
+                  text: LocaleKeys.time_slots.tr(),
+                  icon: Icons.more_time_rounded,
+                  height: 46,
+                  onPressed: () => context.push(TimeSlotsPage.routeName),
+                ),
+
                 const SizedBox(height: 20),
 
-                // Contact Info
-                Text(
-                  'contact_info'.tr(),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: accentColor,
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
+                // ── Contact info ───────────────────────────────────────────
+                _SectionLabel(LocaleKeys.contact_info.tr()),
                 const SizedBox(height: 8),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: cardColor,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                _InfoCard(
                   child: Column(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(user.email,
-                              style: Theme.of(context).textTheme.bodyMedium),
-                          const SizedBox(width: 8),
-                          Icon(Icons.mail, color: iconColor),
-                        ],
+                      _InfoRow(
+                        icon: Icons.mail_rounded,
+                        text: user.email,
                       ),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(user.phone,
-                              style: Theme.of(context).textTheme.bodyMedium),
-                          const SizedBox(width: 8),
-                          Icon(Icons.phone, color: iconColor),
-                        ],
+                      const SizedBox(height: 10),
+                      _InfoRow(
+                        icon: Icons.phone_rounded,
+                        text: user.phone,
                       ),
                     ],
                   ),
@@ -221,6 +141,177 @@ class DoctorProfilePage extends ConsumerWidget {
           );
         },
       ),
+    );
+  }
+}
+
+// ─── Profile header ──────────────────────────────────────────────────────────
+
+class _ProfileHeader extends StatelessWidget {
+
+  const _ProfileHeader({required this.user, required this.isDark});
+  final dynamic user;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [AppColors.tealDark, AppColors.teal.withValues(alpha: 0.6)]
+              : [AppColors.teal, AppColors.tealDark],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.teal.withValues(alpha: 0.3),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  LocaleKeys.dr_username.tr(namedArgs: {'name': user.name}),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                if (user.specialty?.isNotEmpty == true)
+                  Text(
+                    user.specialty!,
+                    style: const TextStyle(
+                        color: Colors.white70, fontSize: 13),
+                  ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.star_rounded,
+                        color: Colors.amber, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${user.rating?.toStringAsFixed(1) ?? '0.0'}',
+                      style: const TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.w600),
+                    ),
+                    if (user.hospital?.isNotEmpty == true) ...[
+                      const SizedBox(width: 12),
+                      const Icon(Icons.local_hospital_rounded,
+                          color: Colors.white70, size: 14),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          user.hospital!,
+                          style: const TextStyle(
+                              color: Colors.white70, fontSize: 12),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          CircleAvatar(
+            radius: 44,
+            backgroundColor: Colors.white.withValues(alpha: 0.2),
+            backgroundImage: (user.imageUrl != null &&
+                    user.imageUrl!.isNotEmpty)
+                ? NetworkImage(user.imageUrl!) as ImageProvider
+                : null,
+            child: (user.imageUrl == null || user.imageUrl!.isEmpty)
+                ? const Icon(Icons.person_rounded,
+                    size: 44, color: Colors.white)
+                : null,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppColors.accent(context),
+          ),
+    );
+  }
+}
+
+class _InfoCard extends StatelessWidget {
+  const _InfoCard({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.card(context),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({required this.icon, required this.text});
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(7),
+          decoration: BoxDecoration(
+            color: AppColors.teal.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 16, color: AppColors.teal),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            text,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ),
+      ],
     );
   }
 }

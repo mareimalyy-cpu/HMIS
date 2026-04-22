@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 
 import '../themes/app_colors.dart';
-import '../../features/booking/models/appointment_model.dart';
+import '../../features/booking/data/models/appointment_model.dart';
 
 class AppointmentCard extends StatelessWidget {
-  final AppointmentModel appointment;
-  final VoidCallback? onTap;
-  final bool showDate;
 
   const AppointmentCard({
-    super.key,
-    required this.appointment,
+    required this.appointment, super.key,
     this.onTap,
     this.showDate = false,
   });
+  final AppointmentModel appointment;
+  final VoidCallback? onTap;
+  final bool showDate;
 
   @override
   Widget build(BuildContext context) {

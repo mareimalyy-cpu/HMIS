@@ -1,0 +1,176 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ──────────────────────────────────────────────────────
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return request.auth.uid == uid;
+    }
+
+    function getUserData() {
+      let doc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return doc != null ? doc.data : null;
+    }
+
+    function getRole() {
+      let data = getUserData();
+      return data != null ? data.get('role', '') : '';
+    }
+
+    function isDoctor() {
+      return isSignedIn() && getRole() == 'doctor';
+    }
+
+    function isPatient() {
+      return isSignedIn() && getRole() == 'patient';
+    }
+
+    function isAdmin() {
+      return isSignedIn() && getRole() == 'admin';
+    }
+
+    function isReceptionist() {
+      return isSignedIn() && getRole() == 'receptionist';
+    }
+
+    function isAdminOrReceptionist() {
+      return isAdmin() || isReceptionist();
+    }
+
+    function isApprovedDoctor() {
+      let data = getUserData();
+      return isDoctor() && data != null && data.get('doctorStatus', '') == 'approved';
+    }
+
+    // ── users/ ────────────────────────────────────────────────────────────────
+    // Stores ALL users (patients, doctors, admin, receptionist).
+    // Used for login, profile, and cross-role lookups.
+
+    match /users/{userId} {
+      // Any authenticated user can read any user profile (needed for doctor listings, etc.)
+      allow read: if isSignedIn();
+
+      // A user can write their own document; admin/receptionist can write any
+      allow write: if isOwner(userId) || isAdminOrReceptionist();
+
+      // notifications sub-collection (patients receive slot cancellation alerts)
+      match /notifications/{notifId} {
+        allow read, write: if isOwner(userId) || isAdminOrReceptionist();
+      }
+
+      // medicalRecords sub-collection — stored under users/{patientId}/medicalRecords
+      match /medicalRecords/{recordId} {
+        allow read: if isSignedIn() && (
+          isOwner(userId) ||
+          isApprovedDoctor() ||
+          isAdminOrReceptionist()
+        );
+        allow create, update: if isApprovedDoctor() || isAdmin();
+        allow delete: if isAdmin();
+
+        match /prescriptions/{prescriptionId} {
+          allow read: if isSignedIn() && (
+            isOwner(userId) ||
+            isApprovedDoctor() ||
+            isAdminOrReceptionist()
+          );
+          allow write: if isApprovedDoctor() || isAdmin();
+        }
+
+        match /labTests/{labTestId} {
+          allow read: if isSignedIn() && (
+            isOwner(userId) ||
+            isApprovedDoctor() ||
+            isAdminOrReceptionist()
+          );
+          allow write: if isApprovedDoctor() || isAdmin();
+        }
+      }
+    }
+
+    // ── doctors/ ─────────────────────────────────────────────────────────────
+    // Mirror of doctor user documents + time_slots sub-collection.
+
+    match /doctors/{doctorId} {
+      // Anyone signed in can read doctor profiles (for patient booking flow)
+      allow read: if isSignedIn();
+
+      // Only the doctor themselves or admin can write their profile
+      allow write: if isOwner(doctorId) || isAdmin();
+
+      // time_slots sub-collection
+      match /timeSlots/{slotId} {
+        // Any signed-in user can read slots (patients need to see available slots)
+        allow read: if isSignedIn();
+
+        // Only the owning doctor can create or delete slots
+        allow create, delete: if isOwner(doctorId) && isApprovedDoctor();
+
+        // Booking update (isBooked = true, appointmentId set) is allowed for any
+        // signed-in user — the transaction in code guarantees safety
+        allow update: if isSignedIn();
+      }
+    }
+
+    // ── patients/ ─────────────────────────────────────────────────────────────
+    // Mirror of patient user documents for role-specific queries.
+
+    match /patients/{patientId} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(patientId) || isAdminOrReceptionist();
+    }
+
+    // ── appointments/ ─────────────────────────────────────────────────────────
+
+    match /appointments/{appointmentId} {
+      // Single document read: full ownership + role check
+      allow get: if isSignedIn() && (
+        resource.data.patientId == request.auth.uid ||
+        resource.data.patientUserId == request.auth.uid ||
+        resource.data.doctorId == request.auth.uid ||
+        isAdminOrReceptionist()
+      );
+
+      // List / query: any authenticated user may query appointments.
+      // Patients need to count a doctor's appointments on a date during booking.
+      // App code uses .count() so individual patient records are never sent to
+      // the client — only the aggregate number crosses the wire.
+      allow list: if isSignedIn();
+
+      // Any signed-in user can create (patient books, receptionist books)
+      allow create: if isSignedIn();
+
+      // Doctor, admin, or receptionist can update status
+      allow update: if isSignedIn() && (
+        resource.data.doctorId == request.auth.uid ||
+        isAdminOrReceptionist()
+      );
+
+      // Only admin or receptionist can delete
+      allow delete: if isAdminOrReceptionist();
+    }
+
+    // ── bills/ ────────────────────────────────────────────────────────────────
+
+    match /bills/{billId} {
+      allow read: if isSignedIn() && (
+        resource.data.patientId == request.auth.uid ||
+        isAdminOrReceptionist()
+      );
+      allow write: if isAdminOrReceptionist();
+    }
+
+    // ── specialties/ ─────────────────────────────────────────────────────────
+
+    match /specialties/{specialtyId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+  }
+}

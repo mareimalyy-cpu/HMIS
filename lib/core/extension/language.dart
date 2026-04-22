@@ -42,9 +42,9 @@ enum Language {
   static Locale getLanguageLocale(Language language) {
     switch (language) {
       case Language.arabic:
-        return Locale('ar');
+        return const Locale('ar');
       case Language.english:
-        return Locale('en');
+        return const Locale('en');
     }
   }
 }

@@ -5,39 +5,6 @@ import '../themes/app_colors.dart';
 import '../themes/style.dart';
 
 class MyTextField extends StatelessWidget {
-  final TextEditingController? controller;
-  final String? labelText;
-  final String? hintText;
-  final String? helperText;
-  final String? errorText;
-  final IconData? prefixIcon;
-  final Widget? suffixIcon;
-  final bool obscureText;
-  final TextInputType? keyboardType;
-  final TextInputAction? textInputAction;
-  final String? Function(String?)? validator;
-  final void Function(String)? onChanged;
-  final void Function(String)? onSubmitted;
-  final void Function()? onTap;
-  final bool enabled;
-  final bool readOnly;
-  final int? maxLines;
-  final int? minLines;
-  final int? maxLength;
-  final List<TextInputFormatter>? inputFormatters;
-  final FocusNode? focusNode;
-  final bool autofocus;
-  final TextCapitalization textCapitalization;
-  final TextAlign textAlign;
-  final EdgeInsetsGeometry? contentPadding;
-  final bool filled;
-  final Color? fillColor;
-  final InputBorder? border;
-  final InputBorder? enabledBorder;
-  final InputBorder? focusedBorder;
-  final InputBorder? errorBorder;
-  final InputBorder? disabledBorder;
-  final bool showClearButton;
 
   const MyTextField({
     super.key,
@@ -75,10 +42,43 @@ class MyTextField extends StatelessWidget {
     this.disabledBorder,
     this.showClearButton = false,
   });
+  final TextEditingController? controller;
+  final String? labelText;
+  final String? hintText;
+  final String? helperText;
+  final String? errorText;
+  final IconData? prefixIcon;
+  final Widget? suffixIcon;
+  final bool obscureText;
+  final TextInputType? keyboardType;
+  final TextInputAction? textInputAction;
+  final String? Function(String?)? validator;
+  final void Function(String)? onChanged;
+  final void Function(String)? onSubmitted;
+  final void Function()? onTap;
+  final bool enabled;
+  final bool readOnly;
+  final int? maxLines;
+  final int? minLines;
+  final int? maxLength;
+  final List<TextInputFormatter>? inputFormatters;
+  final FocusNode? focusNode;
+  final bool autofocus;
+  final TextCapitalization textCapitalization;
+  final TextAlign textAlign;
+  final EdgeInsetsGeometry? contentPadding;
+  final bool filled;
+  final Color? fillColor;
+  final InputBorder? border;
+  final InputBorder? enabledBorder;
+  final InputBorder? focusedBorder;
+  final InputBorder? errorBorder;
+  final InputBorder? disabledBorder;
+  final bool showClearButton;
 
   Widget? _buildSuffixIcon(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    List<Widget> suffixWidgets = [];
+    final List<Widget> suffixWidgets = [];
 
     // Add clear button if enabled and text is not empty
     if (showClearButton && controller != null && enabled) {
@@ -86,7 +86,7 @@ class MyTextField extends StatelessWidget {
         ValueListenableBuilder<TextEditingValue>(
           valueListenable: controller!,
           builder: (context, value, child) {
-            if (value.text.isEmpty) return SizedBox.shrink();
+            if (value.text.isEmpty) return const SizedBox.shrink();
             return IconButton(
               icon: Icon(
                 Icons.clear,
@@ -100,7 +100,7 @@ class MyTextField extends StatelessWidget {
                 }
               },
               padding: EdgeInsets.zero,
-              constraints: BoxConstraints(),
+              constraints: const BoxConstraints(),
             );
           },
         ),
@@ -121,7 +121,7 @@ class MyTextField extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: suffixWidgets.map((widget) {
-        return Padding(padding: EdgeInsets.only(left: 4), child: widget);
+        return Padding(padding: const EdgeInsets.only(left: 4), child: widget);
       }).toList(),
     );
   }
@@ -169,7 +169,7 @@ class MyTextField extends StatelessWidget {
         filled: filled,
         fillColor: fillColor ?? currentColor.withValues(alpha: 0.01),
         contentPadding:
-            contentPadding ?? EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            contentPadding ?? const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
 
         // Border configurations
         border:
@@ -200,11 +200,11 @@ class MyTextField extends StatelessWidget {
             errorBorder ??
             OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.danger, width: 1),
+              borderSide: const BorderSide(color: AppColors.danger, width: 1),
             ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.danger, width: 2),
+          borderSide: const BorderSide(color: AppColors.danger, width: 2),
         ),
         disabledBorder:
             disabledBorder ??

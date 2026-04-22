@@ -390,14 +390,17 @@ class _AppButtonState extends State<AppButton>
           Icon(widget.icon, size: 20, color: contentColor),
           const SizedBox(width: 8),
         ],
-        Text(
-          widget.text,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: _isDisabled ? Colors.grey[400] : contentColor,
-                fontSize: widget.fontSize ?? 15,
-                fontWeight: widget.fontWeight ?? FontWeight.w600,
-                letterSpacing: 0.3,
-              ),
+        Flexible(
+          child: Text(
+            widget.text,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: _isDisabled ? Colors.grey[400] : contentColor,
+                  fontSize: widget.fontSize ?? 15,
+                  fontWeight: widget.fontWeight ?? FontWeight.w600,
+                  letterSpacing: 0.3,
+                ),
+          ),
         ),
       ],
     );

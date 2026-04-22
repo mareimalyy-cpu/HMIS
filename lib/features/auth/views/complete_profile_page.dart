@@ -2,23 +2,21 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hmis/core/services/helper.dart';
-import 'package:hmis/generated/locale_keys.g.dart';
 
+import '../../../core/services/helper.dart';
 import '../../../core/themes/app_colors.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/my_text_filed.dart';
-import '../../patient_home/models/specialty_model.dart';
-import '../models/user_model.dart';
-import '../providers/auth_provider.dart';
-import 'widgets/specialty.dart';
+import '../../../generated/locale_keys.g.dart';
+import '../../patient/data/models/specialty_model.dart';
+import '../data/models/user_model.dart';
+import '../presentation/providers/auth_provider.dart';
+import '../presentation/widgets/specialty.dart';
 
 class CompleteProfilePage extends ConsumerStatefulWidget {
+  const CompleteProfilePage({super.key});
   static const routeName = '/complete-profile';
-
-  final UserModel user;
-  const CompleteProfilePage({super.key, required this.user});
 
   @override
   ConsumerState<CompleteProfilePage> createState() =>
@@ -32,13 +30,15 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
   DateTime? _birthDate;
   SpecialtyModel? _selectedSpecialty;
 
-  bool get _isDoctor => widget.user.role == UserRole.doctor;
+  UserModel? get _user => ref.read(authProvider).value?.currentUser;
+  bool get _isDoctor => _user?.role == UserRole.doctor;
 
   @override
   void initState() {
     super.initState();
-    _phoneCtrl = TextEditingController(text: widget.user.phone);
-    _cityCtrl = TextEditingController(text: widget.user.city);
+    final user = ref.read(authProvider).value?.currentUser;
+    _phoneCtrl = TextEditingController(text: user?.phone ?? '');
+    _cityCtrl = TextEditingController(text: user?.city ?? '');
   }
 
   @override
@@ -80,7 +80,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
   void _save() {
     if (!_formKey.currentState!.validate()) return;
     if (_birthDate == null) {
-      GlassySnackbar.showError(context, 'يرجى اختيار تاريخ الميلاد');
+      GlassySnackbar.showError(context, LocaleKeys.select_birth_date.tr());
       return;
     }
 
@@ -96,6 +96,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final user = ref.watch(authProvider).value?.currentUser;
     final isLoading = ref.watch(authProvider).value?.isLoading ?? false;
 
     ref.listen(authProvider, (_, next) {
@@ -119,20 +120,19 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
               children: [
                 const SizedBox(height: 40),
 
-                // Avatar from Google
                 CircleAvatar(
                   radius: 44,
                   backgroundColor: AppColors.cardBackground,
-                  backgroundImage: widget.user.imageUrl != null
-                      ? NetworkImage(widget.user.imageUrl!)
+                  backgroundImage: user?.imageUrl != null
+                      ? NetworkImage(user!.imageUrl!)
                       : null,
-                  child: widget.user.imageUrl == null
+                  child: user?.imageUrl == null
                       ? const Icon(Icons.person, size: 40, color: Colors.grey)
                       : null,
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  widget.user.name,
+                  user?.name ?? '',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: AppColors.teal,
@@ -140,7 +140,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  widget.user.email,
+                  user?.email ?? '',
                   style: Theme.of(
                     context,
                   ).textTheme.bodySmall?.copyWith(color: Colors.grey),
@@ -150,7 +150,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: Text(
-                    'أكمل بياناتك',
+                    LocaleKeys.complete_your_data.tr(),
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       color: AppColors.teal,
                       fontWeight: FontWeight.bold,
@@ -161,7 +161,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: Text(
-                    'نحتاج بعض المعلومات لإكمال حسابك',
+                    LocaleKeys.complete_profile_subtitle.tr(),
                     style: Theme.of(
                       context,
                     ).textTheme.bodySmall?.copyWith(color: Colors.grey),
@@ -171,7 +171,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                 const SizedBox(height: 24),
                 MyTextField(
                   controller: _phoneCtrl,
-                  hintText: 'phone'.tr(),
+                  hintText: LocaleKeys.phone.tr(),
                   keyboardType: TextInputType.phone,
                   textInputAction: TextInputAction.next,
                   validator: Validators.validatePhone,
@@ -179,13 +179,13 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                 const SizedBox(height: 12),
                 MyTextField(
                   controller: _cityCtrl,
-                  hintText: 'city'.tr(),
+                  hintText: LocaleKeys.city.tr(),
                   textInputAction: TextInputAction.done,
-                  validator: (v) => Validators.validateRequired(v, 'city'.tr()),
+                  validator: (v) =>
+                      Validators.validateRequired(v, LocaleKeys.city.tr()),
                 ),
                 const SizedBox(height: 12),
 
-                // Date of Birth picker
                 MyTextField(
                   readOnly: true,
                   onTap: _pickDate,
@@ -197,13 +197,14 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                   Specialty(
                     value: _selectedSpecialty,
                     onSelected: (s) => setState(() => _selectedSpecialty = s),
-                    validator: (v) => v == null ? 'يرجى اختيار التخصص' : null,
+                    validator: (v) =>
+                        v == null ? LocaleKeys.select_specialty.tr() : null,
                   ),
                 ],
 
                 const SizedBox(height: 32),
                 AppButton.primary(
-                  text: 'حفظ البيانات',
+                  text: LocaleKeys.save_changes.tr(),
                   onPressed: isLoading ? null : _save,
                   isLoading: isLoading,
                 ),

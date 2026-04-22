@@ -205,6 +205,140 @@ class AppTheme {
         showSelectedLabels: true,
         showUnselectedLabels: true,
       ),
+      // ── Date Picker ──────────────────────────────────────────────────────
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: backgroundColor,
+        headerBackgroundColor: AppColors.teal,
+        headerForegroundColor: Colors.white,
+        headerHeadlineStyle: const TextStyle(
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+        headerHelpStyle: const TextStyle(fontSize: 13, color: Colors.white70),
+        weekdayStyle: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: baseColor.withValues(alpha: 0.6),
+        ),
+        dayStyle: TextStyle(fontSize: 13, color: baseColor),
+        dayForegroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return Colors.white;
+          if (states.contains(WidgetState.disabled)) {
+            return baseColor.withValues(alpha: 0.3);
+          }
+          return baseColor;
+        }),
+        dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return AppColors.teal;
+          return Colors.transparent;
+        }),
+        dayOverlayColor: WidgetStateProperty.all(
+          AppColors.teal.withValues(alpha: 0.12),
+        ),
+        todayForegroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return Colors.white;
+          return AppColors.teal;
+        }),
+        todayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return AppColors.teal;
+          return Colors.transparent;
+        }),
+        todayBorder: const BorderSide(color: AppColors.teal, width: 1.5),
+        yearStyle: TextStyle(fontSize: 13, color: baseColor),
+        yearForegroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return Colors.white;
+          return baseColor;
+        }),
+        yearBackgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return AppColors.teal;
+          return Colors.transparent;
+        }),
+        rangeSelectionBackgroundColor: AppColors.teal.withValues(alpha: 0.15),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        dividerColor: dividerColor,
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: surfaceColor,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: dividerColor),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: AppColors.teal, width: 2),
+          ),
+        ),
+        cancelButtonStyle: TextButton.styleFrom(
+          foregroundColor: baseColor.withValues(alpha: 0.7),
+          textStyle: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        confirmButtonStyle: TextButton.styleFrom(
+          foregroundColor: AppColors.teal,
+          textStyle: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.transparent,
+      ),
+      // ── Time Picker ──────────────────────────────────────────────────────
+      timePickerTheme: TimePickerThemeData(
+        backgroundColor: backgroundColor,
+        dialBackgroundColor: surfaceColor,
+        dialHandColor: AppColors.teal,
+        dialTextColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return Colors.white;
+          return baseColor;
+        }),
+        hourMinuteColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return AppColors.teal;
+          return surfaceColor;
+        }),
+        hourMinuteTextColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return Colors.white;
+          return baseColor;
+        }),
+        hourMinuteTextStyle: const TextStyle(
+          fontSize: 48,
+          fontWeight: FontWeight.bold,
+        ),
+        hourMinuteShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        dayPeriodColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return AppColors.teal;
+          return surfaceColor;
+        }),
+        dayPeriodTextColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return Colors.white;
+          return baseColor;
+        }),
+        dayPeriodTextStyle: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+        ),
+        dayPeriodShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+          side: BorderSide(color: dividerColor),
+        ),
+        dayPeriodBorderSide: BorderSide(color: dividerColor),
+        entryModeIconColor: baseColor.withValues(alpha: 0.7),
+        helpTextStyle: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: baseColor.withValues(alpha: 0.6),
+          letterSpacing: 1.2,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        padding: const EdgeInsets.all(24),
+        cancelButtonStyle: TextButton.styleFrom(
+          foregroundColor: baseColor.withValues(alpha: 0.7),
+          textStyle: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        confirmButtonStyle: TextButton.styleFrom(
+          foregroundColor: AppColors.teal,
+          textStyle: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+      ),
       textTheme: textTheme,
     );
   }

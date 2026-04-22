@@ -5,8 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 enum NetworkStatus { online, weak, offline, backOnline }
 
 class NetworkService {
-  static final NetworkService instance = NetworkService._internal();
   NetworkService._internal();
+  static final NetworkService instance = NetworkService._internal();
 
   final Connectivity _connectivity = Connectivity();
   NetworkStatus _lastStatus = NetworkStatus.online;

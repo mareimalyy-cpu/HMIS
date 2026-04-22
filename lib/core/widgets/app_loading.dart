@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:hmis/core/themes/app_colors.dart';
+import '../themes/app_colors.dart';
 
 class AppLoading extends StatefulWidget {
-  final double size;
-  final Color? color;
 
   const AppLoading({super.key, this.size = 60, this.color});
+  final double size;
+  final Color? color;
 
   @override
   State<AppLoading> createState() => _AppLoadingState();
@@ -76,14 +76,12 @@ class _AppLoadingState extends State<AppLoading>
 /// Wraps any widget and shows a blocking overlay with [AppLoading]
 /// whenever [isLoading] is true.
 class AppLoadingOverlay extends StatelessWidget {
-  final bool isLoading;
-  final Widget child;
 
   const AppLoadingOverlay({
-    super.key,
-    required this.isLoading,
-    required this.child,
+    required this.isLoading, required this.child, super.key,
   });
+  final bool isLoading;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {

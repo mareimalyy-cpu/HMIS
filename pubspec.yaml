@@ -3,7 +3,6 @@ description: "A new Flutter project."
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-
 version: 1.0.0+1
 
 environment:
@@ -20,9 +19,10 @@ dependencies:
   cloud_firestore: ^6.1.0
   connectivity_plus: ^7.0.0
   cupertino_icons: ^1.0.8
-  device_info_plus: ^13.0.0
+  device_info_plus: ^12.4.0
   dio: ^5.9.0
   easy_localization: ^3.0.8
+  file_picker: ^11.0.2
   firebase_auth: ^6.1.2
   firebase_core: ^4.2.1
   firebase_messaging: ^16.0.4
@@ -47,18 +47,19 @@ dependencies:
   responsive_framework: ^1.5.1
   riverpod_annotation: ^4.0.2
   skeletonizer: ^2.1.1
+  supabase_flutter: ^2.9.0
   timezone: ^0.11.0
   url_launcher: ^6.3.2
   uuid: ^4.5.2
 
 dev_dependencies:
   build_runner: ^2.7.1
-  riverpod_generator: ^4.0.3
   flutter_gen_runner: ^5.12.0
   flutter_launcher_icons: ^0.14.4
   flutter_lints: ^6.0.0
   flutter_test:
     sdk: flutter
+  riverpod_generator: ^4.0.3
 flutter:
 
   uses-material-design: true

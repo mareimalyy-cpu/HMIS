@@ -111,11 +111,6 @@ extension SnackbarTypeX on SnackbarType {
 // =============================================================================
 
 class _GlassyOverlay extends StatefulWidget {
-  final String message;
-  final SnackbarType type;
-  final Duration duration;
-  final VoidCallback onDismissed;
-  final void Function(_GlassyOverlayState state) onStateCreated;
 
   const _GlassyOverlay({
     required this.message,
@@ -124,6 +119,11 @@ class _GlassyOverlay extends StatefulWidget {
     required this.onDismissed,
     required this.onStateCreated,
   });
+  final String message;
+  final SnackbarType type;
+  final Duration duration;
+  final VoidCallback onDismissed;
+  final void Function(_GlassyOverlayState state) onStateCreated;
 
   @override
   State<_GlassyOverlay> createState() => _GlassyOverlayState();
@@ -217,10 +217,10 @@ class _GlassyOverlayState extends State<_GlassyOverlay>
 // =============================================================================
 
 class _GlassySnackbarContent extends StatelessWidget {
-  final String message;
-  final SnackbarType type;
 
   const _GlassySnackbarContent({required this.message, required this.type});
+  final String message;
+  final SnackbarType type;
 
   @override
   Widget build(BuildContext context) {
@@ -231,7 +231,7 @@ class _GlassySnackbarContent extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.7),
               borderRadius: BorderRadius.circular(12),
@@ -262,11 +262,11 @@ class _GlassySnackbarContent extends StatelessWidget {
                   ),
                   child: Icon(type.icon, color: type.color, size: 20),
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     message,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 14,
                       fontWeight: FontWeight.w500,

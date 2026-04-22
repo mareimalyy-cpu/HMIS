@@ -1,14 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:hmis/core/widgets/my_text_filed.dart';
+import 'my_text_filed.dart';
 
 class SearchField extends StatelessWidget {
-  final TextEditingController? controller;
-  final String hintText;
-  final ValueChanged<String>? onChanged;
-  final ValueChanged<String>? onSubmitted;
-  final VoidCallback? onTap;
-  final bool autofocus;
-  final FocusNode? focusNode;
 
   const SearchField({
     super.key,
@@ -20,6 +13,13 @@ class SearchField extends StatelessWidget {
     this.autofocus = false,
     this.focusNode,
   });
+  final TextEditingController? controller;
+  final String hintText;
+  final ValueChanged<String>? onChanged;
+  final ValueChanged<String>? onSubmitted;
+  final VoidCallback? onTap;
+  final bool autofocus;
+  final FocusNode? focusNode;
 
   @override
   Widget build(BuildContext context) {

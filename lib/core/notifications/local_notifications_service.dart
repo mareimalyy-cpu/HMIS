@@ -11,10 +11,10 @@ import 'package:timezone/timezone.dart' as tz;
 import '../helper/deep_link_helper.dart';
 
 class LocalNotificationsService {
-  static final LocalNotificationsService instance =
-      LocalNotificationsService._internal();
   factory LocalNotificationsService() => instance;
   LocalNotificationsService._internal();
+  static final LocalNotificationsService instance =
+      LocalNotificationsService._internal();
 
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
@@ -91,7 +91,7 @@ class LocalNotificationsService {
     log('🔕 Notifications DISABLED & canceled');
   }
 
-  Future<void> toggle(bool value) async =>
+  Future<void> toggle({required bool value}) async =>
       value ? await enable() : await disable();
 
   Future<void> show({
@@ -196,7 +196,7 @@ class LocalNotificationsService {
         enableVibration: true,
         visibility: NotificationVisibility.public,
         ticker: 'ticker',
-        largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
+        largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
       ),
       iOS: const DarwinNotificationDetails(
         presentAlert: true,
@@ -216,7 +216,7 @@ class LocalNotificationsService {
   Future<void> _handleLocalNotification(NotificationResponse response) async {
     final handle = DeepLinkHelper.instance;
     if (response.payload != null) {
-      log("🧭 Notification Tap Detected with Payload: ${response.id}");
+      log('🧭 Notification Tap Detected with Payload: ${response.id}');
 
       Future.microtask(() async {
         if (response.payload != null && response.payload!.contains('url')) {
@@ -235,7 +235,7 @@ class LocalNotificationsService {
         details.didNotificationLaunchApp &&
         details.notificationResponse != null) {
       log(
-        "🚀 App launched via Notification with payload: ${details.notificationResponse?.payload}",
+        '🚀 App launched via Notification with payload: ${details.notificationResponse?.payload}',
       );
       await Future.delayed(const Duration(milliseconds: 100));
 
@@ -251,9 +251,9 @@ final localNotificationsServiceProvider = Provider<LocalNotificationsService>(
 Future<void> notificationTapBackground(NotificationResponse response) async {
   if (response.payload != null) {
     await DeepLinkHelper.instance.handleRouteById(
-      pyload: response.payload ?? "0",
+      pyload: response.payload ?? '0',
     );
   } else {
-    log("No event ID found in the notification data.");
+    log('No event ID found in the notification data.');
   }
 }

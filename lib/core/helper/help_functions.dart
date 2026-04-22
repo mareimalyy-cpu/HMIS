@@ -56,7 +56,7 @@ String formatDateTime(String date, BuildContext context, {String? format}) {
       final parts = date.split('.');
       final fractionalSeconds = parts[1];
       if (fractionalSeconds.length > 3) {
-        cleanedDate = "${parts[0]}.${fractionalSeconds.substring(0, 3)}";
+        cleanedDate = '${parts[0]}.${fractionalSeconds.substring(0, 3)}';
       }
     }
 

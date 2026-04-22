@@ -16,8 +16,8 @@ mixin ScaffoldMessengerMixin {
         ).withValues(alpha: 0.8),
         behavior: SnackBarBehavior.floating,
         elevation: 0,
-        padding: EdgeInsets.all(16),
-        margin: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );

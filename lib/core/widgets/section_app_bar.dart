@@ -3,16 +3,15 @@ import 'package:flutter/material.dart';
 import '../themes/app_colors.dart';
 
 class SectionAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final String title;
-  final bool showBackButton;
-  final List<Widget>? actions;
 
   const SectionAppBar({
-    super.key,
-    required this.title,
+    required this.title, super.key,
     this.showBackButton = true,
     this.actions,
   });
+  final String title;
+  final bool showBackButton;
+  final List<Widget>? actions;
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +21,7 @@ class SectionAppBar extends StatelessWidget implements PreferredSizeWidget {
       automaticallyImplyLeading: false,
       leading: showBackButton
           ? IconButton(
-              icon: Icon(
+              icon: const Icon(
                 Icons.chevron_left,
                 color: AppColors.white,
               ),

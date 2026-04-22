@@ -1,17 +1,15 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-import '../../features/patient_home/models/specialty_model.dart';
+import '../../features/patient/data/models/specialty_model.dart';
 
 class SpecialtyCard extends StatelessWidget {
-  final SpecialtyModel specialty;
-  final VoidCallback onTap;
 
   const SpecialtyCard({
-    super.key,
-    required this.specialty,
-    required this.onTap,
+    required this.specialty, required this.onTap, super.key,
   });
+  final SpecialtyModel specialty;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +18,7 @@ class SpecialtyCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: DecoratedBox(
         decoration: BoxDecoration(
           color: specialty.color,
           borderRadius: BorderRadius.circular(16),

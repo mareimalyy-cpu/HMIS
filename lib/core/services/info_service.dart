@@ -19,18 +19,18 @@ class DeviceInfoService {
       String? deviceId;
 
       if (Platform.isAndroid) {
-        AndroidDeviceInfo androidInfo = await _deviceInfo.androidInfo;
+        final AndroidDeviceInfo androidInfo = await _deviceInfo.androidInfo;
         deviceName = androidInfo.model;
         deviceId = androidInfo.id;
       } else if (Platform.isIOS) {
-        IosDeviceInfo iosInfo = await _deviceInfo.iosInfo;
+        final IosDeviceInfo iosInfo = await _deviceInfo.iosInfo;
         deviceName = iosInfo.name;
         deviceId = iosInfo.identifierForVendor;
       }
-      String? token = await _fcm.getToken();
-      String? aPNSToken = await _fcm.getAPNSToken();
+      final String? token = await _fcm.getToken();
+      final String? aPNSToken = await _fcm.getAPNSToken();
 
-      Map<String, dynamic> userData = {
+      final Map<String, dynamic> userData = {
         'deviceName': deviceName,
         'deviceId': deviceId,
         'fcmToken': token ?? aPNSToken ?? '',
@@ -43,23 +43,23 @@ class DeviceInfoService {
           .doc(deviceId)
           .set(userData, SetOptions(merge: true));
 
-      log("User data saved successfully!");
+      log('User data saved successfully!');
     } catch (e) {
-      log("Error saving user data: $e");
+      log('Error saving user data: $e');
     }
   }
 
   Future<String> getDeviceId() async {
     try {
       if (Platform.isAndroid) {
-        AndroidDeviceInfo androidInfo = await _deviceInfo.androidInfo;
+        final AndroidDeviceInfo androidInfo = await _deviceInfo.androidInfo;
         return androidInfo.id;
       } else if (Platform.isIOS) {
-        IosDeviceInfo iosInfo = await _deviceInfo.iosInfo;
+        final IosDeviceInfo iosInfo = await _deviceInfo.iosInfo;
         return iosInfo.identifierForVendor ?? '';
       }
     } catch (e) {
-      log("Error retrieving device ID: $e");
+      log('Error retrieving device ID: $e');
     }
     return '';
   }

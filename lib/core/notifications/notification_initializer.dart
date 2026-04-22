@@ -6,8 +6,8 @@ import 'local_notifications_service.dart';
 import 'remote_notifications_service.dart';
 
 class NotificationInitializer {
-  static final NotificationInitializer instance = NotificationInitializer._();
   NotificationInitializer._();
+  static final NotificationInitializer instance = NotificationInitializer._();
 
   late final LocalNotificationsService _localNotificationsService;
   late final FirebaseMessagingService _remoteNotificationsService;
@@ -33,9 +33,9 @@ class NotificationInitializer {
   }
 
   // ================= TOGGLE (Settings) =================
-  Future<bool> changeNotificationPermission(bool enabled) async {
-    await _localNotificationsService.toggle(enabled);
-    await _remoteNotificationsService.toogle(enabled);
+  Future<bool> changeNotificationPermission({bool enabled = true}) async {
+    await _localNotificationsService.toggle(value:  enabled);
+    await _remoteNotificationsService.toogle(toogle:  enabled);
     _notificationsEnabled = enabled;
     return _notificationsEnabled;
   }

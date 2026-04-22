@@ -1,33 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../features/admin_home/views/admin_patient_detail_page.dart';
-import '../../../features/admin_home/views/admin_shell_page.dart';
-import '../../../features/auth/models/user_model.dart';
-import '../../../features/auth/views/complete_profile_page.dart';
-import '../../../features/auth/views/doctor_register_page.dart';
-import '../../../features/auth/views/login_page.dart';
-import '../../../features/auth/views/patient_register_page.dart';
-import '../../../features/auth/views/role_selection_page.dart';
-import '../../../features/booking/views/booking_page.dart';
-import '../../../features/booking/views/booking_success_page.dart';
-import '../../../features/clinics/views/clinics_page.dart';
-import '../../../features/clinics/views/doctor_details_page.dart';
-import '../../../features/onboarding/views/onboarding_page.dart';
-import '../../../features/patient_home/models/specialty_model.dart';
-import '../../../features/patient_home/views/patient_shell_page.dart';
-import '../../../features/doctor_home/views/doctor_shell_page.dart';
-import '../../../features/settings/views/settings_page.dart';
+import '../../../features/admin/presentation/screens/admin_patient_detail_page.dart';
+import '../../../features/admin/presentation/screens/admin_shell_page.dart';
+import '../../../features/auth/data/models/user_model.dart';
+import '../../../features/profile/presentation/screens/complete_profile_page.dart';
+import '../../../features/auth/presentation/screens/doctor_register_page.dart';
+import '../../../features/auth/presentation/screens/login_page.dart';
+import '../../../features/auth/presentation/screens/patient_register_page.dart';
+import '../../../features/auth/presentation/screens/pending_approval_page.dart';
+import '../../../features/auth/presentation/screens/role_selection_page.dart';
+import '../../../features/booking/presentation/screens/booking_page.dart';
+import '../../../features/booking/presentation/screens/booking_success_page.dart';
+import '../../../features/patient/presentation/screens/clinics_page.dart';
+import '../../../features/patient/presentation/screens/doctor_details_page.dart';
+import '../../../features/medical_records/presentation/screens/medical_records_page.dart';
+import '../../../features/onboarding/presentation/screens/onboarding_page.dart';
+import '../../../features/patient/data/models/specialty_model.dart';
+import '../../../features/patient/presentation/screens/patient_shell_page.dart';
+import '../../../features/doctor/presentation/screens/doctor_shell_page.dart';
+import '../../../features/profile/presentation/screens/edit_profile_page.dart';
+import '../../../features/receptionist/presentation/screens/receptionist_shell_page.dart';
+import '../../../features/settings/presentation/screens/settings_page.dart';
+import '../../../features/doctor/presentation/screens/time_slots_page.dart';
 
 import '../../enum/constants.dart';
 import '../../local_services/local_storage.dart';
 import '../app_routing_base.dart';
 
 class MobileRouting extends AppRoutingBase {
-  static final MobileRouting _singleton = MobileRouting._internal();
   MobileRouting._internal() {
     _router = _buildRouter();
   }
+  static final MobileRouting _singleton = MobileRouting._internal();
   static MobileRouting get instance => _singleton;
 
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -47,17 +52,15 @@ class MobileRouting extends AppRoutingBase {
       debugLogDiagnostics: true,
       initialLocation: _getInitialRoute(),
       errorBuilder: (context, state) => const Scaffold(),
-      redirect: (context, state) {
-        return null;
-      },
+      redirect: (context, state) => null,
       routes: [
-        // Onboarding Route
+        // ── Onboarding ──────────────────────────────────────────
         GoRoute(
           path: OnboardingPage.routeName,
           builder: (context, state) => const OnboardingPage(),
         ),
 
-        // Auth Routes
+        // ── Auth ────────────────────────────────────────────────
         GoRoute(
           path: RoleSelectionPage.routeName,
           builder: (context, state) => const RoleSelectionPage(),
@@ -71,10 +74,7 @@ class MobileRouting extends AppRoutingBase {
         ),
         GoRoute(
           path: CompleteProfilePage.routeName,
-          builder: (context, state) {
-            final user = state.extra as UserModel;
-            return CompleteProfilePage(user: user);
-          },
+          builder: (context, state) => const CompleteProfilePage(),
         ),
         GoRoute(
           path: PatientRegisterPage.routeName,
@@ -84,8 +84,12 @@ class MobileRouting extends AppRoutingBase {
           path: DoctorRegisterPage.routeName,
           builder: (context, state) => const DoctorRegisterPage(),
         ),
+        GoRoute(
+          path: PendingApprovalPage.routeName,
+          builder: (context, state) => const PendingApprovalPage(),
+        ),
 
-        // Patient Routes
+        // ── Patient ─────────────────────────────────────────────
         GoRoute(
           path: PatientShellPage.routeName,
           builder: (context, state) => const PatientShellPage(),
@@ -93,21 +97,21 @@ class MobileRouting extends AppRoutingBase {
         GoRoute(
           path: ClinicsPage.routeName,
           builder: (context, state) {
-            final specialty = state.extra as SpecialtyModel;
+            final specialty = state.extra as SpecialtyModel?;
             return ClinicsPage(specialty: specialty);
           },
         ),
         GoRoute(
           path: DoctorDetailsPage.routeName,
           builder: (context, state) {
-            final doctor = state.extra as UserModel;
+            final doctor = state.extra! as UserModel;
             return DoctorDetailsPage(doctor: doctor);
           },
         ),
         GoRoute(
           path: BookingPage.routeName,
           builder: (context, state) {
-            final doctor = state.extra as UserModel;
+            final doctor = state.extra! as UserModel;
             return BookingPage(doctor: doctor);
           },
         ),
@@ -116,13 +120,13 @@ class MobileRouting extends AppRoutingBase {
           builder: (context, state) => const BookingSuccessPage(),
         ),
 
-        // Doctor Routes
+        // ── Doctor ──────────────────────────────────────────────
         GoRoute(
           path: DoctorShellPage.routeName,
           builder: (context, state) => const DoctorShellPage(),
         ),
 
-        // Admin Routes
+        // ── Admin ───────────────────────────────────────────────
         GoRoute(
           path: AdminShellPage.routeName,
           builder: (context, state) => const AdminShellPage(),
@@ -130,12 +134,18 @@ class MobileRouting extends AppRoutingBase {
         GoRoute(
           path: '/admin-patient-detail',
           builder: (context, state) {
-            final patient = state.extra as UserModel;
+            final patient = state.extra! as UserModel;
             return AdminPatientDetailPage(patient: patient);
           },
         ),
 
-        // Placeholder - Support & Notifications
+        // ── Receptionist ─────────────────────────────────────────
+        GoRoute(
+          path: ReceptionistShellPage.routeName,
+          builder: (context, state) => const ReceptionistShellPage(),
+        ),
+
+        // ── Shared ──────────────────────────────────────────────
         GoRoute(
           path: '/notifications',
           builder: (context, state) =>
@@ -144,12 +154,32 @@ class MobileRouting extends AppRoutingBase {
         GoRoute(
           path: '/support',
           builder: (context, state) =>
-              const Scaffold(body: Center(child: Text('Supporrt'))),
+              const Scaffold(body: Center(child: Text('Support'))),
         ),
         GoRoute(
           path: SettingsPage.routeName,
           name: SettingsPage.routeName,
           builder: (context, state) => const SettingsPage(),
+        ),
+        GoRoute(
+          path: EditProfilePage.routeName,
+          builder: (context, state) => const EditProfilePage(),
+        ),
+
+        // ── Doctor sub-pages ────────────────────────────────────
+        GoRoute(
+          path: TimeSlotsPage.routeName,
+          builder: (context, state) => const TimeSlotsPage(),
+        ),
+        GoRoute(
+          path: MedicalRecordsPage.routeName,
+          builder: (context, state) {
+            final extra = state.extra! as Map<String, String>;
+            return MedicalRecordsPage(
+              patientId: extra['patientId'] ?? '',
+              patientName: extra['patientName'] ?? '',
+            );
+          },
         ),
       ],
     );
@@ -158,7 +188,8 @@ class MobileRouting extends AppRoutingBase {
   static String _getInitialRoute() {
     final storage = LocalStorage.instance;
 
-    final hideOnboarding = storage.get(Constants.hideOnboarding.name) == true;
+    final hideOnboarding =
+        storage.get(Constants.hideOnboarding.name) == true;
     if (!hideOnboarding) return OnboardingPage.routeName;
 
     final roleStr = storage.get(Constants.userRole.name) as String?;
@@ -170,6 +201,8 @@ class MobileRouting extends AppRoutingBase {
           return DoctorShellPage.routeName;
         case UserRole.admin:
           return AdminShellPage.routeName;
+        case UserRole.receptionist:
+          return ReceptionistShellPage.routeName;
       }
     }
 

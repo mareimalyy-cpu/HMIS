@@ -7,8 +7,8 @@ import '../enum/constants.dart';
 part 'generated/local_storage.g.dart';
 
 class LocalStorage {
-  static final LocalStorage _instance = LocalStorage._internal();
   LocalStorage._internal();
+  static final LocalStorage _instance = LocalStorage._internal();
   static LocalStorage get instance => _instance;
   late Box _box;
 

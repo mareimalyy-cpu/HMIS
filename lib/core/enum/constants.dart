@@ -14,4 +14,11 @@ enum Constants {
   specialty,
   specialties,
   appointments,
+  patients,
+  doctors,
+  bills,
+  timeSlots,
+  medicalRecords,
+  prescriptions,
+  labTests,
 }

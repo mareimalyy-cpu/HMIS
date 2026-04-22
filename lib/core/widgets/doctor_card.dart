@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 
 import '../themes/app_colors.dart';
-import '../../features/auth/models/user_model.dart';
+import '../../features/auth/data/models/user_model.dart';
 
 class DoctorCard extends StatelessWidget {
-  final UserModel doctor;
-  final VoidCallback? onTap;
 
   const DoctorCard({
-    super.key,
-    required this.doctor,
+    required this.doctor, super.key,
     this.onTap,
   });
+  final UserModel doctor;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
