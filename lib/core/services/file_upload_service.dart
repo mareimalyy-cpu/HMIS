@@ -2,7 +2,8 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 
-import 'supabase_storage_service.dart';
+import '../../features/attachments/data/services/supabase_storage_service.dart';
+
 
 class FileUploadService {
 

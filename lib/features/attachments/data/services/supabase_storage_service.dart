@@ -1,12 +1,9 @@
 import 'dart:io';
 import 'dart:developer';
 
+import '../../../../core/secrets/app_secrets.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-const _supabaseUrl = 'https://sxsawoyeqwsewenpcpgw.supabase.co';
-// NOTE: Use the "anon/public" JWT key from Supabase Dashboard → Settings → API.
-// The key below is a secret key — replace with the anon key for client-side use.
-const _supabaseAnonKey = 'sb_secret_ySdS-XAAjab9vDsjUQLnBQ_Vwckg8sI';
 const _bucketName = 'profile-images';
 
 class SupabaseStorageService {
@@ -17,7 +14,7 @@ class SupabaseStorageService {
       _instance ??= SupabaseStorageService._();
 
   static Future<void> initialize() async {
-    await Supabase.initialize(url: _supabaseUrl, anonKey: _supabaseAnonKey);
+    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
   }
 
   SupabaseClient get _client => Supabase.instance.client;

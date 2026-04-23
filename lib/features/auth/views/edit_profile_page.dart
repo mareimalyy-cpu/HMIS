@@ -6,11 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/services/helper.dart';
-import '../../../core/services/supabase_storage_service.dart';
 import '../../../core/themes/app_colors.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/my_text_filed.dart';
 import '../../../generated/locale_keys.g.dart';
+import '../../attachments/data/services/supabase_storage_service.dart';
 import '../data/models/user_model.dart';
 import '../presentation/providers/auth_provider.dart';
 
