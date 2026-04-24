@@ -163,7 +163,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     AppButton(
                       text: page == _pages.length - 1
                           ? LocaleKeys.register_now.tr()
-                          : LocaleKeys.confirmButton.tr(),
+                          : LocaleKeys.next.tr(),
                       onPressed: _next,
                     ),
                   ],

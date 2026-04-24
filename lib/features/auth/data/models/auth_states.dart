@@ -9,6 +9,7 @@ class AuthStates {
     this.isAuthenticated = false,
     this.selectedRole,
     this.needsProfileCompletion = false,
+    this.needsEmailVerification = false,
   });
 
   factory AuthStates.initial() => const AuthStates();
@@ -18,6 +19,7 @@ class AuthStates {
   final bool isAuthenticated;
   final UserRole? selectedRole;
   final bool needsProfileCompletion;
+  final bool needsEmailVerification;
 
   bool get isDoctor => currentUser?.role == UserRole.doctor;
   bool get isPatient => currentUser?.role == UserRole.patient;
@@ -32,6 +34,7 @@ class AuthStates {
     bool? isAuthenticated,
     UserRole? selectedRole,
     bool? needsProfileCompletion,
+    bool? needsEmailVerification,
     bool clearError = false,
     bool clearUser = false,
   }) {
@@ -43,6 +46,8 @@ class AuthStates {
       selectedRole: selectedRole ?? this.selectedRole,
       needsProfileCompletion:
           needsProfileCompletion ?? this.needsProfileCompletion,
+      needsEmailVerification:
+          needsEmailVerification ?? this.needsEmailVerification,
     );
   }
 }

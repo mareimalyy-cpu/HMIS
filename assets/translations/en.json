@@ -10,7 +10,6 @@
   "selectLanguage": "Select Language",
   "goodEvening": "Good Evening",
   "goodMorning": "Good Morning",
-
   "skip": "Skip",
   "safe_confidential": "Safe & Confidential",
   "rest_assured_your_privacy_and_security_are_our_top_priorities": "Rest assured, your privacy and security are our top priorities",
@@ -18,19 +17,16 @@
   "book_appointments_easily_anytime_anywhere": "Book appointments easily anytime, anywhere",
   "find_a_specialist": "Find a Specialist",
   "discover_a_wide_range_of_expert_doctors_across_various_medical_fields": "Discover a wide range of expert doctors across various medical fields",
-
   "welcome_tonhmis": "Welcome to\nHMIS",
   "register_now": "Register Now",
   "doctor": "Doctor",
   "patient": "Patient",
-
   "sign_in": "Sign In",
   "email": "Email:",
   "password": "Password:",
   "forgot_password": "Forgot Password?",
   "dont_have_an_account": "Don't have an account? ",
   "already_have_an_account": "Already have an account? ",
-
   "patient_registration": "Patient Registration",
   "doctor_registration": "Doctor Registration",
   "name": "Name:",
@@ -44,30 +40,25 @@
   "hospital_name": "Hospital Name:",
   "hospital_address": "Hospital Address:",
   "register": "Register",
-
   "home": "Home",
   "search": "Search",
   "appointments": "Appointments",
   "my_account": "My Account",
   "records": "Records",
-
   "home_page": "Home",
   "search_for_doctor": "Search for Doctor",
   "book_now": "Book Now",
   "specialties": "Specialties",
   "clinics_suffix": "Clinics",
-
   "search_for_doctor_title": "Search for Doctor",
   "no_results_found": "No results found",
   "no_doctors_found": "No doctors found",
   "error_e": "Error occurred",
-
   "doctor_details": "Doctor Details",
   "about": "About",
   "no_bio_available": "No bio available",
   "not_specified": "Not specified",
   "contact_info": "Contact Info",
-
   "book_with_doctor": "Book with Doctor",
   "booking_details": "Booking Details",
   "patient_name": "Patient Name",
@@ -79,22 +70,18 @@
   "please_select_a_day_and_time": "Please select a day and time",
   "booking_successful": "Booking Successful!",
   "back_to_home": "Back to Home",
-
   "no_appointments_yet": "No appointments yet",
   "no_appointments_today": "No appointments today",
   "todays_appointments": "Today's Appointments",
   "new_patients": "New Patients",
   "recent_cases": "Recent Cases",
   "no_records_yet": "No records yet",
-
   "medical_history": "Medical History",
   "no_medical_history_yet": "No medical history yet",
   "not_logged_in": "Not logged in",
-
   "doctor_profile": "Doctor Profile",
   "dr_doctorname": "Dr. {name}",
   "dr_username": "Dr. {name}",
-
   "settings": "Settings",
   "appearance": "Appearance",
   "theme_mode": "Theme Mode",
@@ -103,10 +90,8 @@
   "app_language": "App Language",
   "push_notifications": "Push Notifications",
   "sign_out": "Sign Out",
-
   "notifications_title": "Notifications",
   "support_title": "Support",
-
   "no_account_found_with_this_email": "No account found with this email",
   "incorrect_password": "Incorrect password",
   "this_email_is_already_registered": "This email is already registered",
@@ -114,7 +99,6 @@
   "invalid_email_address": "Invalid email address",
   "network_error_please_check_your_connection": "Network error. Please check your connection",
   "an_unexpected_error_occurred": "An unexpected error occurred",
-
   "doctors_count": "Doctors",
   "patients_count": "Patients",
   "appointments_stat": "Appointments",
@@ -168,13 +152,11 @@
   "complete_profile_subtitle": "We need a few more details to set up your account",
   "select_birth_date": "Please select your birth date",
   "select_specialty": "Please select a specialty",
-
   "add_medical_record": "Add Medical Record",
   "diagnosis": "Diagnosis",
   "treatment": "Treatment",
   "visit_date": "Visit Date",
   "open_records": "Medical Records",
-
   "bills_title": "Bills",
   "bill_amount": "Amount",
   "paid": "Paid",
@@ -183,28 +165,23 @@
   "total_revenue": "Total Revenue",
   "add_bill": "Add Bill",
   "bill_patient": "Patient",
-
   "dashboard": "Dashboard",
   "manage_patients": "Patients",
   "manage_doctors": "Doctors",
   "manage_bills": "Bills",
-
   "receptionist": "Receptionist",
   "approved_doctors": "Approved",
-
   "status_scheduled": "Scheduled",
   "status_completed": "Completed",
   "status_cancelled": "Cancelled",
   "status_pending": "Pending",
   "status_no_show": "No Show",
-
   "my_appointments": "My Appointments",
   "my_medical_records": "My Medical Records",
   "filter_all": "All",
   "upcoming": "Upcoming",
   "cancel_appointment": "Cancel Appointment",
   "appointment_number": "Appt. No.",
-
   "prescriptions": "Prescriptions",
   "lab_tests": "Lab Tests",
   "medication_name": "Medication Name",
@@ -216,7 +193,6 @@
   "test_result": "Result",
   "add_prescription": "Add Prescription",
   "add_lab_test": "Add Lab Test",
-
   "create_appointment": "Create Appointment",
   "upload_photo": "Upload Photo",
   "create_bill": "Create Bill",
@@ -251,5 +227,34 @@
   "slot_not_found": "Slot not found",
   "send": "Send",
   "or": "Or",
-  "sign_in_with_google": "Sign in with Google"
+  "sign_in_with_google": "Sign in with Google",
+  "choose_your_role": "Choose Your Role",
+  "i_am_a_doctor": "I'm a Doctor",
+  "i_am_a_patient": "I'm a Patient",
+  "doctor_role_desc": "Manage appointments\n& patient records",
+  "patient_role_desc": "Book appointments\n& find specialists",
+  "login_to_continue": "Login to continue",
+
+  "notifications": "Notifications",
+  "no_notifications_yet": "No notifications yet",
+  "no_notifications_subtitle": "You're all caught up! We'll notify you when something needs your attention.",
+  "mark_all_read": "Mark all read",
+  "notif_type_appointment": "Appointment",
+  "notif_type_system": "System",
+  "notif_type_reminder": "Reminder",
+  "notif_type_approval": "Approval",
+  "notif_type_billing": "Billing",
+  "notif_priority_low": "Low",
+  "notif_priority_normal": "Normal",
+  "notif_priority_high": "High",
+  "notif_priority_critical": "Critical",
+  "next": "Next",
+
+  "email_verification_title": "Verify Your Email",
+  "check_your_email": "Check Your Email",
+  "email_verification_body": "We sent a verification link to\n{email}\nOpen your email and click the link, then tap Done.",
+  "i_verified": "I've Verified",
+  "resend_email": "Resend Email",
+  "email_resent": "Verification email sent",
+  "back_to_login": "Back to Login"
 }

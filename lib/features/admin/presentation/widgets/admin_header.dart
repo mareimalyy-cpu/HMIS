@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/themes/app_colors.dart';
 import '../../../../gen/assets.gen.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../notifications/presentation/widgets/notification_bell_button.dart';
 
 class AdminHeader extends ConsumerWidget {
   const AdminHeader({super.key});
@@ -29,6 +30,8 @@ class AdminHeader extends ConsumerWidget {
                 Assets.images.png.appLogo.image(height: 50),
                 const SizedBox(width: 8),
                 const Spacer(),
+                const NotificationBellButton(),
+                const SizedBox(width: 4),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [

@@ -16,6 +16,7 @@ class AdminDashboardPage extends ConsumerWidget {
   const AdminDashboardPage({super.key});
 
   @override
+
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncState = ref.watch(adminProvider);
 

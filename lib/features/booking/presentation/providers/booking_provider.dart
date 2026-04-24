@@ -10,6 +10,9 @@ import '../../../attachments/data/services/file_upload_service.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../doctor/data/models/time_slot_model.dart';
 import '../../../doctor/data/services/remote/time_slot_remote_service.dart';
+import '../../../notifications/data/models/notification_model.dart';
+import '../../../notifications/data/services/notification_firestore_service.dart';
+import '../../../../core/notifications/local_notifications_service.dart';
 import '../../data/models/appointment_model.dart';
 import '../../../attachments/data/models/booking_attachment.dart';
 import '../../data/models/booking_states.dart';
@@ -22,6 +25,8 @@ class Booking extends _$Booking {
   late final BookingRemoteService _bookingService;
   late final TimeSlotRemoteService _slotService;
   final _uploadService = FileUploadService.instance;
+  final _notifService = NotificationFirestoreService();
+  final _localNotif = LocalNotificationsService.instance;
 
   @override
   Future<BookingStates> build() async {
@@ -226,10 +231,72 @@ class Booking extends _$Booking {
       );
 
       state = AsyncData(current.copyWith(isLoading: false, isSuccess: true));
+
+      unawaited(_sendBookingNotifications(
+        patient: patient,
+        doctor: doctor,
+        appointment: appointment,
+      ));
     } catch (e) {
       state = AsyncData(
         current.copyWith(isLoading: false, errorMessage: e.toString()),
       );
+    }
+  }
+
+  // ─── Post-booking notifications & reminders ──────────────────────────────────
+
+  Future<void> _sendBookingNotifications({
+    required UserModel patient,
+    required UserModel doctor,
+    required AppointmentModel appointment,
+  }) async {
+    try {
+      final appointmentDateTime = DateTime.parse(
+        '${appointment.date} ${appointment.time}',
+      );
+
+      // Notify doctor of new appointment
+      unawaited(_notifService.send(
+        userId: doctor.id,
+        title: 'New Appointment',
+        body: 'Patient ${patient.name} booked on ${appointment.date} at ${appointment.time}',
+        type: NotificationType.appointment,
+        priority: NotificationPriority.high,
+        entityId: appointment.id,
+        route: '/doctor-home',
+      ));
+
+      // Notify patient of booking confirmation
+      unawaited(_notifService.send(
+        userId: patient.id,
+        title: 'Booking Confirmed',
+        body: 'Your appointment with Dr. ${doctor.name} on ${appointment.date} at ${appointment.time} is confirmed.',
+        type: NotificationType.appointment,
+        priority: NotificationPriority.normal,
+        entityId: appointment.id,
+        route: '/patient-home',
+      ));
+
+      // Schedule 24h reminder
+      final reminder24h = appointmentDateTime.subtract(const Duration(hours: 24));
+      unawaited(_localNotif.schedule(
+        title: 'Appointment Tomorrow',
+        body: 'You have an appointment with Dr. ${doctor.name} tomorrow at ${appointment.time}.',
+        delay: reminder24h.toIso8601String(),
+        priority: 2,
+      ));
+
+      // Schedule 1h reminder
+      final reminder1h = appointmentDateTime.subtract(const Duration(hours: 1));
+      unawaited(_localNotif.schedule(
+        title: 'Appointment in 1 Hour',
+        body: 'Your appointment with Dr. ${doctor.name} starts at ${appointment.time}.',
+        delay: reminder1h.toIso8601String(),
+        priority: 2,
+      ));
+    } catch (e) {
+      log('Post-booking notifications error: $e');
     }
   }
 

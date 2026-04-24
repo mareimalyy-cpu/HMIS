@@ -7,6 +7,7 @@ import '../../../../core/themes/app_colors.dart';
 import '../../../../core/widgets/specialty_card.dart';
 import '../../../../gen/assets.gen.dart';
 import '../../../../generated/locale_keys.g.dart';
+import '../../../notifications/presentation/widgets/notification_bell_button.dart';
 import '../providers/patient_home_provider.dart';
 import 'clinics_page.dart';
 
@@ -30,8 +31,17 @@ class PatientHomePage extends ConsumerWidget {
               // ── Header ─────────────────────────────────────────────────
               SafeArea(
                 bottom: false,
-                child: Center(
-                  child: Assets.images.png.appLogo.image(height: 50),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 48),
+                      const Spacer(),
+                      Assets.images.png.appLogo.image(height: 50),
+                      const Spacer(),
+                      const NotificationBellButton(),
+                    ],
+                  ),
                 ),
               ),
 

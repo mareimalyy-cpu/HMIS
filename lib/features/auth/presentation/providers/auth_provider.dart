@@ -4,6 +4,8 @@ import 'dart:developer';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/local_services/local_storage.dart';
+import '../../../notifications/data/models/notification_model.dart';
+import '../../../notifications/data/services/notification_firestore_service.dart';
 import '../../data/models/auth_states.dart';
 import '../../data/models/user_model.dart';
 import '../../data/services/local/auth_local_service.dart';
@@ -15,13 +17,23 @@ part 'generated/auth_provider.g.dart';
 class Auth extends _$Auth {
   late final AuthRemoteService _remoteService;
   late final AuthLocalService _localService;
+  late final NotificationFirestoreService _notifService;
 
   @override
   Future<AuthStates> build() async {
     _remoteService = AuthRemoteService();
     _localService = AuthLocalService(LocalStorage.instance);
+    _notifService = NotificationFirestoreService();
     try {
-      return _loadFromLocal() ?? AuthStates.initial();
+      final local = _loadFromLocal();
+      if (local != null) {
+        // Always re-verify doctor approval status from Firestore in background
+        if (local.currentUser?.role == UserRole.doctor) {
+          unawaited(_refreshDoctorStatus());
+        }
+        return local;
+      }
+      return AuthStates.initial();
     } catch (e) {
       return AuthStates(errorMessage: e.toString());
     }
@@ -29,18 +41,39 @@ class Auth extends _$Auth {
 
   AuthStates? _loadFromLocal() {
     final cachedUser = _localService.getUser();
-    if (cachedUser != null) {
-      return AuthStates(
-        currentUser: cachedUser,
-        isAuthenticated: true,
-        selectedRole: cachedUser.role,
-      );
+    if (cachedUser == null) return null;
+    // For doctors, use cached approval status — Firestore refresh happens in background
+    final isAuthenticated =
+        cachedUser.role != UserRole.doctor || cachedUser.isApprovedDoctor;
+    return AuthStates(
+      currentUser: cachedUser,
+      isAuthenticated: isAuthenticated,
+      selectedRole: cachedUser.role,
+    );
+  }
+
+  Future<void> verifyDoctorApproval() => _refreshDoctorStatus();
+
+  Future<void> _refreshDoctorStatus() async {
+    try {
+      final user = await _remoteService.getCurrentUser();
+      if (user == null) return;
+      unawaited(_localService.saveUser(user));
+      final isApproved = user.isApprovedDoctor;
+      state = AsyncData(AuthStates(
+        currentUser: user,
+        isAuthenticated: isApproved,
+        selectedRole: user.role,
+      ));
+    } catch (e) {
+      log('Doctor status refresh failed: $e');
     }
-    return null;
   }
 
   void selectRole(UserRole role) {
-    state = AsyncData(state.value!.copyWith(selectedRole: role, clearError: true));
+    state = AsyncData(
+      state.value!.copyWith(selectedRole: role, clearError: true),
+    );
   }
 
   Future<void> login({required String email, required String password}) async {
@@ -50,46 +83,98 @@ class Auth extends _$Auth {
       unawaited(_localService.saveUser(user));
       // Doctors pending approval cannot access the app
       final isApproved = user.role != UserRole.doctor || user.isApprovedDoctor;
-      state = AsyncData(AuthStates(
-        currentUser: user,
-        isAuthenticated: isApproved,
-        selectedRole: user.role,
-      ));
+      state = AsyncData(
+        AuthStates(
+          currentUser: user,
+          isAuthenticated: isApproved,
+          selectedRole: user.role,
+        ),
+      );
+    } on EmailNotVerifiedException {
+      state = AsyncData(
+        state.value!.copyWith(isLoading: false, needsEmailVerification: true),
+      );
     } catch (e) {
       log('Login error: $e');
-      state = AsyncData(state.value!.copyWith(
-        isLoading: false,
-        errorMessage: _mapFirebaseError(e),
-      ));
+      state = AsyncData(
+        state.value!.copyWith(
+          isLoading: false,
+          errorMessage: _mapFirebaseError(e),
+        ),
+      );
     }
   }
 
-  Future<void> loginWithGoogle() async {
+  Future<void> sendEmailVerification() async {
+    try {
+      await _remoteService.sendEmailVerification();
+    } catch (e) {
+      log('Send verification error: $e');
+    }
+  }
+
+  Future<void> checkEmailVerified({
+    required String email,
+    required String password,
+  }) async {
     state = AsyncData(state.value!.copyWith(isLoading: true, clearError: true));
     try {
-      final user = await _remoteService.loginWithGoogle();
+      await _remoteService.reloadUser();
+      if (_remoteService.isEmailVerified) {
+        // Re-run full login now that email is verified
+        await login(email: email, password: password);
+      } else {
+        state = AsyncData(
+          state.value!.copyWith(
+            isLoading: false,
+            errorMessage: 'البريد الإلكتروني لم يتم التحقق منه بعد',
+          ),
+        );
+      }
+    } catch (e) {
+      state = AsyncData(
+        state.value!.copyWith(
+          isLoading: false,
+          errorMessage: _mapFirebaseError(e),
+        ),
+      );
+    }
+  }
+
+  Future<void> loginWithGoogle({UserRole role = UserRole.patient}) async {
+    state = AsyncData(state.value!.copyWith(isLoading: true, clearError: true));
+    try {
+      final user = await _remoteService.loginWithGoogle(role: role);
       final isIncomplete = user.phone.isEmpty || user.city.isEmpty;
       if (isIncomplete) {
-        state = AsyncData(AuthStates(
-          currentUser: user,
-          isAuthenticated: false,
-          needsProfileCompletion: true,
-          selectedRole: user.role,
-        ));
+        state = AsyncData(
+          AuthStates(
+            currentUser: user,
+            isAuthenticated: false,
+            needsProfileCompletion: true,
+            selectedRole: user.role,
+          ),
+        );
       } else {
         unawaited(_localService.saveUser(user));
-        state = AsyncData(AuthStates(
-          currentUser: user,
-          isAuthenticated: true,
-          selectedRole: user.role,
-        ));
+        final isApproved =
+            user.role != UserRole.doctor || user.isApprovedDoctor;
+        state = AsyncData(
+          AuthStates(
+            currentUser: user,
+            isAuthenticated: isApproved,
+            selectedRole: user.role,
+          ),
+        );
       }
     } catch (e) {
       log('Google login error: $e');
-      state = AsyncData(state.value!.copyWith(
-        isLoading: false,
-        errorMessage: _mapFirebaseError(e),
-      ));
+      state = AsyncData(
+        state.value!.copyWith(
+          isLoading: false,
+          errorMessage: _mapFirebaseError(e),
+        ),
+      );
     }
   }
 
@@ -109,17 +194,38 @@ class Auth extends _$Auth {
       );
       await _remoteService.updateUser(updated);
       unawaited(_localService.saveUser(updated));
-      state = AsyncData(AuthStates(
-        currentUser: updated,
-        isAuthenticated: true,
-        selectedRole: updated.role,
-      ));
+      // Doctors completing their Google profile still need admin approval
+      if (updated.role == UserRole.doctor) {
+        unawaited(
+          _notifyAdminsNewDoctor(
+            doctorName: updated.name,
+            doctorId: updated.id,
+          ),
+        );
+        state = AsyncData(
+          AuthStates(
+            currentUser: updated,
+            isAuthenticated: false,
+            selectedRole: updated.role,
+          ),
+        );
+      } else {
+        state = AsyncData(
+          AuthStates(
+            currentUser: updated,
+            isAuthenticated: true,
+            selectedRole: updated.role,
+          ),
+        );
+      }
     } catch (e) {
       log('Complete profile error: $e');
-      state = AsyncData(state.value!.copyWith(
-        isLoading: false,
-        errorMessage: _mapFirebaseError(e),
-      ));
+      state = AsyncData(
+        state.value!.copyWith(
+          isLoading: false,
+          errorMessage: _mapFirebaseError(e),
+        ),
+      );
     }
   }
 
@@ -142,17 +248,23 @@ class Auth extends _$Auth {
         age: age,
       );
       unawaited(_localService.saveUser(user));
-      state = AsyncData(AuthStates(
-        currentUser: user,
-        isAuthenticated: true,
-        selectedRole: UserRole.patient,
-      ));
+      unawaited(_remoteService.sendEmailVerification());
+      state = AsyncData(
+        AuthStates(
+          currentUser: user,
+          isAuthenticated: false,
+          needsEmailVerification: true,
+          selectedRole: UserRole.patient,
+        ),
+      );
     } catch (e) {
       log('Register patient error: $e');
-      state = AsyncData(state.value!.copyWith(
-        isLoading: false,
-        errorMessage: _mapFirebaseError(e),
-      ));
+      state = AsyncData(
+        state.value!.copyWith(
+          isLoading: false,
+          errorMessage: _mapFirebaseError(e),
+        ),
+      );
     }
   }
 
@@ -176,19 +288,47 @@ class Auth extends _$Auth {
         hospital: hospital,
         hospitalAddress: hospitalAddress,
       );
-      // Doctor stays unauthenticated until admin approves
+      // Doctor stays unauthenticated until admin approves; verify email too
       unawaited(_localService.saveUser(user));
-      state = AsyncData(AuthStates(
-        currentUser: user,
-        isAuthenticated: false,
-        selectedRole: UserRole.doctor,
-      ));
+      unawaited(_remoteService.sendEmailVerification());
+      unawaited(_notifyAdminsNewDoctor(doctorName: name, doctorId: user.id));
+      state = AsyncData(
+        AuthStates(
+          currentUser: user,
+          isAuthenticated: false,
+          needsEmailVerification: true,
+          selectedRole: UserRole.doctor,
+        ),
+      );
     } catch (e) {
       log('Register doctor error: $e');
-      state = AsyncData(state.value!.copyWith(
-        isLoading: false,
-        errorMessage: _mapFirebaseError(e),
-      ));
+      state = AsyncData(
+        state.value!.copyWith(
+          isLoading: false,
+          errorMessage: _mapFirebaseError(e),
+        ),
+      );
+    }
+  }
+
+  Future<void> _notifyAdminsNewDoctor({
+    required String doctorName,
+    required String doctorId,
+  }) async {
+    try {
+      final adminIds = await _remoteService.getAdminIds();
+      if (adminIds.isEmpty) return;
+      await _notifService.broadcast(
+        userIds: adminIds,
+        title: 'طلب تفعيل طبيب جديد',
+        body: 'د. $doctorName طلب الانضمام وينتظر موافقتك',
+        type: NotificationType.approval,
+        priority: NotificationPriority.high,
+        route: '/admin-home',
+        payload: {'doctorId': doctorId, 'tab': '2'},
+      );
+    } catch (e) {
+      log('Failed to notify admins of new doctor: $e');
     }
   }
 
@@ -197,16 +337,17 @@ class Auth extends _$Auth {
     try {
       await _remoteService.updateUser(updated);
       unawaited(_localService.saveUser(updated));
-      state = AsyncData(state.value!.copyWith(
-        currentUser: updated,
-        isLoading: false,
-      ));
+      state = AsyncData(
+        state.value!.copyWith(currentUser: updated, isLoading: false),
+      );
     } catch (e) {
       log('Update profile error: $e');
-      state = AsyncData(state.value!.copyWith(
-        isLoading: false,
-        errorMessage: 'فشل تحديث البيانات',
-      ));
+      state = AsyncData(
+        state.value!.copyWith(
+          isLoading: false,
+          errorMessage: 'فشل تحديث البيانات',
+        ),
+      );
     }
   }
 
@@ -217,10 +358,12 @@ class Auth extends _$Auth {
       state = AsyncData(state.value!.copyWith(isLoading: false));
     } catch (e) {
       log('Reset password error: $e');
-      state = AsyncData(state.value!.copyWith(
-        isLoading: false,
-        errorMessage: _mapFirebaseError(e),
-      ));
+      state = AsyncData(
+        state.value!.copyWith(
+          isLoading: false,
+          errorMessage: _mapFirebaseError(e),
+        ),
+      );
     }
   }
 

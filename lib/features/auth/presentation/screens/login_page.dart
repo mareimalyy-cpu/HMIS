@@ -7,6 +7,7 @@ import '../../../../../core/services/helper.dart';
 import '../../../../../core/themes/app_colors.dart';
 import '../../../../../core/utils/validators.dart';
 import '../../../../../core/widgets/app_button.dart';
+import '../../../../../core/widgets/app_dialog.dart';
 import '../../../../../core/widgets/app_loading.dart';
 import '../../../../../core/widgets/my_text_filed.dart';
 import '../../../../../gen/assets.gen.dart';
@@ -15,6 +16,7 @@ import '../../data/models/user_model.dart';
 import '../providers/auth_provider.dart';
 import '../../../profile/presentation/screens/complete_profile_page.dart';
 import 'doctor_register_page.dart';
+import 'email_verification_page.dart';
 import 'patient_register_page.dart';
 import 'pending_approval_page.dart';
 
@@ -32,17 +34,21 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
+  final _obscurePassword = ValueNotifier<bool>(true);
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _obscurePassword.dispose();
     super.dispose();
   }
 
+  bool _isPending = false;
+
   void _handleLogin() {
     if (!_formKey.currentState!.validate()) return;
+    _isPending = true;
     ref
         .read(authProvider.notifier)
         .login(
@@ -53,39 +59,31 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   void _showForgotPasswordDialog() {
     final emailCtrl = TextEditingController(text: _emailController.text.trim());
-    showDialog(
+    AppDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(
-          LocaleKeys.forgot_password.tr(),
-          textAlign: TextAlign.right,
-        ),
-        content: MyTextField(
-          controller: emailCtrl,
-          hintText: 'email'.tr(),
-          keyboardType: TextInputType.emailAddress,
-          fillColor: AppColors.cardBackground,
-        ),
-        actions: [
-          AppButton.outlined(
-            text: LocaleKeys.cancelButton.tr(),
-            onPressed: () => Navigator.pop(ctx),
-            height: 40,
-            width: null,
-          ),
-          AppButton.primary(
-            text: LocaleKeys.send.tr(),
-            onPressed: () {
-              Navigator.pop(ctx);
-              ref
-                  .read(authProvider.notifier)
-                  .resetPassword(emailCtrl.text.trim());
-            },
-            height: 40,
-            width: null,
-          ),
-        ],
+      title: LocaleKeys.forgot_password.tr(),
+      icon: Icons.lock_reset_rounded,
+      contentWidget: MyTextField(
+        controller: emailCtrl,
+        hintText: LocaleKeys.email.tr(),
+        keyboardType: TextInputType.emailAddress,
       ),
+      actions: [
+        AppDialogAction(
+          label: LocaleKeys.cancelButton.tr(),
+          type: AppButtonType.outlined,
+          onPressed: () => Navigator.pop(context),
+        ),
+        AppDialogAction(
+          label: LocaleKeys.send.tr(),
+          onPressed: () {
+            Navigator.pop(context);
+            ref
+                .read(authProvider.notifier)
+                .resetPassword(emailCtrl.text.trim());
+          },
+        ),
+      ],
     );
   }
 
@@ -94,25 +92,42 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final authState = ref.watch(authProvider);
 
     ref.listen(authProvider, (_, next) {
+      if (!_isPending) return;
       final state = next.value;
       if (state == null) return;
 
       if (state.errorMessage != null) {
+        _isPending = false;
         GlassySnackbar.showError(context, state.errorMessage!);
+        return;
+      }
+
+      if (state.needsEmailVerification) {
+        _isPending = false;
+        context.push(
+          EmailVerificationPage.routeName,
+          extra: {
+            'email': _emailController.text.trim(),
+            'password': _passwordController.text,
+          },
+        );
+        return;
       }
 
       if (state.needsProfileCompletion && state.currentUser != null) {
+        _isPending = false;
         context.push(CompleteProfilePage.routeName);
         return;
       }
 
-      // Pending doctor — cannot access app yet
       if (state.isPendingApproval && state.currentUser != null) {
+        _isPending = false;
         context.go(PendingApprovalPage.routeName);
         return;
       }
 
       if (state.isAuthenticated && state.currentUser != null) {
+        _isPending = false;
         final role = state.currentUser!.role;
         switch (role) {
           case UserRole.doctor:
@@ -158,21 +173,24 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     validator: Validators.validateEmail,
                   ),
                   const SizedBox(height: 16),
-                  MyTextField(
-                    controller: _passwordController,
-                    hintText: 'password'.tr(),
-                    obscureText: _obscurePassword,
-                    textInputAction: TextInputAction.done,
-                    validator: Validators.validatePassword,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                        size: 20,
+                  ValueListenableBuilder<bool>(
+                    valueListenable: _obscurePassword,
+                    builder: (_, obscure, _) => MyTextField(
+                      controller: _passwordController,
+                      hintText: 'password'.tr(),
+                      obscureText: obscure,
+                      textInputAction: TextInputAction.done,
+                      validator: Validators.validatePassword,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          obscure
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          size: 20,
+                        ),
+                        onPressed: () =>
+                            _obscurePassword.value = !_obscurePassword.value,
                       ),
-                      onPressed: () =>
-                          setState(() => _obscurePassword = !_obscurePassword),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -202,9 +220,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       text: LocaleKeys.sign_in_with_google.tr(),
                       onPressed: isLoading
                           ? null
-                          : () => ref
-                                .read(authProvider.notifier)
-                                .loginWithGoogle(),
+                          : () {
+                              _isPending = true;
+                              ref
+                                  .read(authProvider.notifier)
+                                  .loginWithGoogle(role: widget.role);
+                            },
                       icon: Icons.g_mobiledata_rounded,
                       fontSize: 14,
                     ),

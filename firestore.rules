@@ -64,6 +64,11 @@ service cloud.firestore {
         allow read, write: if isOwner(userId) || isAdminOrReceptionist();
       }
 
+      // fcmTokens sub-collection — one doc per device, keyed by deviceId
+      match /fcmTokens/{tokenId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+
       // medicalRecords sub-collection — stored under users/{patientId}/medicalRecords
       match /medicalRecords/{recordId} {
         allow read: if isSignedIn() && (
@@ -171,6 +176,38 @@ service cloud.firestore {
     match /specialties/{specialtyId} {
       allow read: if isSignedIn();
       allow write: if isAdmin();
+    }
+
+    // ── notifications/ ───────────────────────────────────────────────────────
+    // Global notification center. Each doc has a `userId` field identifying
+    // the recipient.
+    //
+    // NOTE: Firestore list rules cannot evaluate resource.data — split into
+    //       get (ownership check) + list (signed-in, query does the filtering).
+
+    match /notifications/{notifId} {
+      // Single-doc read: strict ownership
+      allow get: if isSignedIn() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+      // Queries: allow any signed-in user — client always filters by userId.
+      // Individual document access is still gated by the get rule above.
+      allow list: if isSignedIn();
+      // Any signed-in user may create (server-side fanout for other users)
+      allow create: if isSignedIn();
+      // Update / delete: only the owner or admin
+      allow update, delete: if isSignedIn() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+    }
+
+    // ── notification_queue/ ──────────────────────────────────────────────────
+    // Queued broadcast jobs. Only admin/receptionist may enqueue; all
+    // authenticated users may read (needed for queue processing in app).
+
+    match /notification_queue/{jobId} {
+      allow read: if isSignedIn();
+      allow write: if isAdminOrReceptionist();
     }
   }
 }

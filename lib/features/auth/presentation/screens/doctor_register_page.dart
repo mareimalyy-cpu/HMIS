@@ -11,6 +11,7 @@ import '../../../../gen/assets.gen.dart';
 import '../../../../generated/locale_keys.g.dart';
 import '../../../patient/data/models/specialty_model.dart';
 import '../providers/auth_provider.dart';
+import 'email_verification_page.dart';
 import '../widgets/specialty.dart';
 
 class DoctorRegisterPage extends ConsumerStatefulWidget {
@@ -45,8 +46,11 @@ class _DoctorRegisterPageState extends ConsumerState<DoctorRegisterPage> {
     super.dispose();
   }
 
+  bool _isPending = false;
+
   void _handleRegister() {
     if (!_formKey.currentState!.validate()) return;
+    _isPending = true;
     ref
         .read(authProvider.notifier)
         .registerDoctor(
@@ -64,16 +68,32 @@ class _DoctorRegisterPageState extends ConsumerState<DoctorRegisterPage> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     ref.listen(authProvider, (_, next) {
+      if (!_isPending) return;
       final state = next.value;
       if (state == null) return;
       if (state.errorMessage != null) {
+        _isPending = false;
         GlassySnackbar.showError(context, state.errorMessage!);
+        return;
+      }
+      if (state.needsEmailVerification) {
+        _isPending = false;
+        context.push(
+          EmailVerificationPage.routeName,
+          extra: {
+            'email': _emailController.text.trim(),
+            'password': _passwordController.text,
+          },
+        );
+        return;
       }
       if (state.isPendingApproval && state.currentUser != null) {
+        _isPending = false;
         context.go('/pending-approval');
         return;
       }
       if (state.isAuthenticated && state.currentUser != null) {
+        _isPending = false;
         context.go('/doctor-home');
       }
     });

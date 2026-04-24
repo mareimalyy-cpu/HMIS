@@ -9,6 +9,7 @@ import '../../../../core/widgets/appointment_card.dart';
 import '../../../../core/widgets/section_app_bar.dart';
 import '../../../admin/presentation/providers/admin_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../notifications/presentation/widgets/notification_bell_button.dart';
 import '../../../patient/presentation/screens/clinics_page.dart';
 
 class ReceptionistHomePage extends ConsumerWidget {
@@ -31,6 +32,7 @@ class ReceptionistHomePage extends ConsumerWidget {
       appBar: SectionAppBar(
         title: LocaleKeys.receptionist.tr(),
         showBackButton: false,
+        actions: const [NotificationBellButton()],
       ),
       body: asyncState.when(
         loading: () => const Center(child: CircularProgressIndicator()),

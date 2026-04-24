@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/themes/app_colors.dart';
 import '../../../../core/widgets/appointment_card.dart';
 import '../../../../gen/assets.gen.dart';
+import '../../../notifications/presentation/widgets/notification_bell_button.dart';
 import '../providers/doctor_home_provider.dart';
 
 class DoctorHomePage extends ConsumerWidget {
@@ -45,7 +46,7 @@ class DoctorHomePage extends ConsumerWidget {
                       const Spacer(),
                       Assets.images.png.appLogo.image(height: 50),
                       const Spacer(),
-                      const SizedBox(width: 48),
+                      const NotificationBellButton(),
                     ],
                   ),
                 ),

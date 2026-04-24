@@ -228,5 +228,35 @@
   "slot_not_found": "الموعد غير موجود",
   "send": "إرسال",
   "or": "أو",
-  "sign_in_with_google": "تسجيل الدخول بـ Google"
+  "sign_in_with_google": "تسجيل الدخول بـ Google",
+
+  "choose_your_role": "اختر دورك",
+  "i_am_a_doctor": "أنا طبيب",
+  "i_am_a_patient": "أنا مريض",
+  "doctor_role_desc": "إدارة المواعيد\nوسجلات المرضى",
+  "patient_role_desc": "احجز مواعيد\nوابحث عن متخصصين",
+  "login_to_continue": "تسجيل الدخول للمتابعة",
+
+  "notifications": "الإشعارات",
+  "no_notifications_yet": "لا توجد إشعارات",
+  "no_notifications_subtitle": "أنت على اطلاع كامل! سنخطرك عند حدوث أي جديد.",
+  "mark_all_read": "تحديد الكل كمقروء",
+  "notif_type_appointment": "موعد",
+  "notif_type_system": "النظام",
+  "notif_type_reminder": "تذكير",
+  "notif_type_approval": "موافقة",
+  "notif_type_billing": "فاتورة",
+  "notif_priority_low": "منخفض",
+  "notif_priority_normal": "عادي",
+  "notif_priority_high": "مرتفع",
+  "notif_priority_critical": "حرج",
+  "next": "التالي",
+
+  "email_verification_title": "تفعيل البريد الإلكتروني",
+  "check_your_email": "تحقق من بريدك الإلكتروني",
+  "email_verification_body": "أرسلنا رابط التفعيل إلى\n{email}\nافتح بريدك وانقر على الرابط، ثم اضغط تم التفعيل.",
+  "i_verified": "تم التفعيل",
+  "resend_email": "إعادة إرسال البريد",
+  "email_resent": "تم إرسال بريد التفعيل",
+  "back_to_login": "العودة لتسجيل الدخول"
 }

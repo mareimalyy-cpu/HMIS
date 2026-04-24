@@ -69,7 +69,7 @@ class PatientHome extends _$PatientHome {
   Future<void> _loadFromRemoteInBackground() async {
     try {
       final remoteState = await _loadFromRemote();
-      state = AsyncData(remoteState);
+      if (ref.mounted) state = AsyncData(remoteState);
     } catch (e) {
       log('Background refresh error: $e');
     }

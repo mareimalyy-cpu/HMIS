@@ -232,5 +232,32 @@ abstract class  LocaleKeys {
   static const send = 'send';
   static const or = 'or';
   static const sign_in_with_google = 'sign_in_with_google';
+  static const choose_your_role = 'choose_your_role';
+  static const i_am_a_doctor = 'i_am_a_doctor';
+  static const i_am_a_patient = 'i_am_a_patient';
+  static const doctor_role_desc = 'doctor_role_desc';
+  static const patient_role_desc = 'patient_role_desc';
+  static const login_to_continue = 'login_to_continue';
+  static const notifications = 'notifications';
+  static const no_notifications_yet = 'no_notifications_yet';
+  static const no_notifications_subtitle = 'no_notifications_subtitle';
+  static const mark_all_read = 'mark_all_read';
+  static const notif_type_appointment = 'notif_type_appointment';
+  static const notif_type_system = 'notif_type_system';
+  static const notif_type_reminder = 'notif_type_reminder';
+  static const notif_type_approval = 'notif_type_approval';
+  static const notif_type_billing = 'notif_type_billing';
+  static const notif_priority_low = 'notif_priority_low';
+  static const notif_priority_normal = 'notif_priority_normal';
+  static const notif_priority_high = 'notif_priority_high';
+  static const notif_priority_critical = 'notif_priority_critical';
+  static const next = 'next';
+  static const email_verification_title = 'email_verification_title';
+  static const check_your_email = 'check_your_email';
+  static const email_verification_body = 'email_verification_body';
+  static const i_verified = 'i_verified';
+  static const resend_email = 'resend_email';
+  static const email_resent = 'email_resent';
+  static const back_to_login = 'back_to_login';
 
 }

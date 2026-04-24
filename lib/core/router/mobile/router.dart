@@ -21,6 +21,8 @@ import '../../../features/patient/presentation/screens/patient_shell_page.dart';
 import '../../../features/doctor/presentation/screens/doctor_shell_page.dart';
 import '../../../features/profile/presentation/screens/edit_profile_page.dart';
 import '../../../features/receptionist/presentation/screens/receptionist_shell_page.dart';
+import '../../../features/auth/presentation/screens/email_verification_page.dart';
+import '../../../features/notifications/presentation/pages/notifications_page.dart';
 import '../../../features/settings/presentation/screens/settings_page.dart';
 import '../../../features/doctor/presentation/screens/time_slots_page.dart';
 
@@ -88,6 +90,16 @@ class MobileRouting extends AppRoutingBase {
           path: PendingApprovalPage.routeName,
           builder: (context, state) => const PendingApprovalPage(),
         ),
+        GoRoute(
+          path: EmailVerificationPage.routeName,
+          builder: (context, state) {
+            final extra = state.extra! as Map<String, String>;
+            return EmailVerificationPage(
+              email: extra['email']!,
+              password: extra['password']!,
+            );
+          },
+        ),
 
         // ── Patient ─────────────────────────────────────────────
         GoRoute(
@@ -148,8 +160,7 @@ class MobileRouting extends AppRoutingBase {
         // ── Shared ──────────────────────────────────────────────
         GoRoute(
           path: '/notifications',
-          builder: (context, state) =>
-              const Scaffold(body: Center(child: Text('Notifications'))),
+          builder: (context, state) => const NotificationsPage(),
         ),
         GoRoute(
           path: '/support',

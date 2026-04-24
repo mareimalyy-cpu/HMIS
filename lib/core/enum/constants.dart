@@ -21,4 +21,7 @@ enum Constants {
   medicalRecords,
   prescriptions,
   labTests,
+  notifications,
+  notificationQueue,
+  fcmTokens,
 }

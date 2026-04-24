@@ -5,11 +5,18 @@ import '../../../../../core/enum/constants.dart';
 
 import '../../models/user_model.dart';
 
+class EmailNotVerifiedException implements Exception {
+  const EmailNotVerifiedException();
+}
+
+
 class AuthRemoteService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   User? get currentFirebaseUser => _auth.currentUser;
+
+  bool get isEmailVerified => _auth.currentUser?.emailVerified ?? false;
 
   Future<UserModel> login({
     required String email,
@@ -19,10 +26,24 @@ class AuthRemoteService {
       email: email,
       password: password,
     );
-    return _getUserFromFirestore(credential.user!.uid);
+    final firebaseUser = credential.user!;
+    if (!firebaseUser.emailVerified) {
+      throw const EmailNotVerifiedException();
+    }
+    return _getUserFromFirestore(firebaseUser.uid);
   }
 
-  Future<UserModel> loginWithGoogle() async {
+  Future<void> sendEmailVerification() async {
+    await _auth.currentUser?.sendEmailVerification();
+  }
+
+  Future<void> reloadUser() async {
+    await _auth.currentUser?.reload();
+  }
+
+  Future<UserModel> loginWithGoogle({
+    UserRole role = UserRole.patient,
+  }) async {
     final googleUser = await GoogleSignIn.instance.authenticate();
     final idToken = googleUser.authentication.idToken;
     final credential = GoogleAuthProvider.credential(idToken: idToken);
@@ -35,9 +56,11 @@ class AuthRemoteService {
         .doc(firebaseUser.uid)
         .get();
 
-    if (doc.exists) return UserModel.fromJson(doc.data()!);
+    if (doc.exists) {
+      return UserModel.fromJson(doc.data()!);
+    }
 
-    // New Google user — partial profile, patient by default
+    // New Google user — create with the role the user selected
     final user = UserModel(
       id: firebaseUser.uid,
       name: firebaseUser.displayName ?? '',
@@ -45,7 +68,10 @@ class AuthRemoteService {
       phone: '',
       city: '',
       imageUrl: firebaseUser.photoURL,
-      role: UserRole.patient,
+      role: role,
+      // Doctors start as pending until admin approves
+      doctorStatus:
+          role == UserRole.doctor ? DoctorStatus.pending : null,
     );
     await _firestore
         .collection(Constants.users.name)
@@ -78,13 +104,7 @@ class AuthRemoteService {
       age: age,
     );
 
-    final data = user.toJson();
-    // Write to users/ (primary for login) and patients/ (role-specific queries)
-    final batch = _firestore.batch();
-    batch.set(_firestore.collection(Constants.users.name).doc(uid), data);
-    batch.set(_firestore.collection(Constants.patients.name).doc(uid), data);
-    await batch.commit();
-
+    await _firestore.collection(Constants.users.name).doc(uid).set(user.toJson());
     return user;
   }
 
@@ -118,35 +138,15 @@ class AuthRemoteService {
       isActive: true,
     );
 
-    final data = user.toJson();
-    // Write to users/ (primary for login) and doctors/ (role-specific queries + time slots)
-    final batch = _firestore.batch();
-    batch.set(_firestore.collection(Constants.users.name).doc(uid), data);
-    batch.set(_firestore.collection(Constants.doctors.name).doc(uid), data);
-    await batch.commit();
-
+    await _firestore.collection(Constants.users.name).doc(uid).set(user.toJson());
     return user;
   }
 
   Future<void> updateUser(UserModel user) async {
-    final data = user.toJson();
-    final batch = _firestore.batch();
-    batch.update(_firestore.collection(Constants.users.name).doc(user.id), data);
-    // Mirror update to role-specific collection
-    if (user.role == UserRole.doctor) {
-      batch.set(
-        _firestore.collection(Constants.doctors.name).doc(user.id),
-        data,
-        SetOptions(merge: true),
-      );
-    } else if (user.role == UserRole.patient) {
-      batch.set(
-        _firestore.collection(Constants.patients.name).doc(user.id),
-        data,
-        SetOptions(merge: true),
-      );
-    }
-    await batch.commit();
+    await _firestore
+        .collection(Constants.users.name)
+        .doc(user.id)
+        .update(user.toJson());
   }
 
   Future<UserModel?> getCurrentUser() async {
@@ -162,6 +162,14 @@ class AuthRemoteService {
 
   Future<void> resetPassword(String email) async {
     await _auth.sendPasswordResetEmail(email: email);
+  }
+
+  Future<List<String>> getAdminIds() async {
+    final snap = await _firestore
+        .collection(Constants.users.name)
+        .where('role', isEqualTo: 'admin')
+        .get();
+    return snap.docs.map((d) => d.id).toList();
   }
 
   Future<UserModel> _getUserFromFirestore(String uid) async {

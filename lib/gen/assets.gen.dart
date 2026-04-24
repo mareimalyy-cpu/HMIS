@@ -31,8 +31,12 @@ class $AssetsImagesPngGen {
   /// File path: assets/images/png/doc.png
   AssetGenImage get doc => const AssetGenImage('assets/images/png/doc.png');
 
+  /// File path: assets/images/png/role-bk.jpg
+  AssetGenImage get roleBk =>
+      const AssetGenImage('assets/images/png/role-bk.jpg');
+
   /// List of all assets
-  List<AssetGenImage> get values => [appLogo, doc];
+  List<AssetGenImage> get values => [appLogo, doc, roleBk];
 }
 
 class $AssetsImagesSvgGen {

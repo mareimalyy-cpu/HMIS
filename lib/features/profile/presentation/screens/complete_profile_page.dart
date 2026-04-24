@@ -12,6 +12,7 @@ import '../../../../core/widgets/my_text_filed.dart';
 import '../../../patient/data/models/specialty_model.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/presentation/screens/pending_approval_page.dart';
 import '../../../auth/presentation/widgets/specialty.dart';
 
 class CompleteProfilePage extends ConsumerStatefulWidget {
@@ -106,8 +107,21 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
       if (state.errorMessage != null) {
         GlassySnackbar.showError(context, state.errorMessage!);
       }
+      if (state.isPendingApproval && state.currentUser != null) {
+        context.go(PendingApprovalPage.routeName);
+        return;
+      }
       if (state.isAuthenticated && state.currentUser != null) {
-        context.go('/patient-home');
+        switch (state.currentUser!.role) {
+          case UserRole.doctor:
+            context.go('/doctor-home');
+          case UserRole.admin:
+            context.go('/admin-home');
+          case UserRole.receptionist:
+            context.go('/receptionist-home');
+          case UserRole.patient:
+            context.go('/patient-home');
+        }
       }
     });
 
