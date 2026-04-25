@@ -27,11 +27,9 @@ class AdminHeader extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Assets.images.png.appLogo.image(height: 50),
                 const SizedBox(width: 8),
-                const Spacer(),
                 const NotificationBellButton(),
-                const SizedBox(width: 4),
+                const Spacer(),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -65,7 +63,7 @@ class AdminHeader extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [

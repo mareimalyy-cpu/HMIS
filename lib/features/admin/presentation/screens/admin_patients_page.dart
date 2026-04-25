@@ -40,17 +40,18 @@ class _AdminPatientsPageState extends ConsumerState<AdminPatientsPage> {
 
     return asyncState.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) =>
-          Center(child: Text('${LocaleKeys.error_e.tr()}: $e')),
+      error: (e, _) => Center(child: Text('${LocaleKeys.error_e.tr()}: $e')),
       data: (state) {
         final filtered = _query.isEmpty
             ? state.patients
             : state.patients
-                .where((p) =>
-                    p.name.contains(_query) ||
-                    p.phone.contains(_query) ||
-                    p.id.contains(_query))
-                .toList();
+                  .where(
+                    (p) =>
+                        p.name.contains(_query) ||
+                        p.phone.contains(_query) ||
+                        p.id.contains(_query),
+                  )
+                  .toList();
 
         return RefreshIndicator(
           onRefresh: () => ref.read(adminProvider.notifier).refresh(),
@@ -62,7 +63,9 @@ class _AdminPatientsPageState extends ConsumerState<AdminPatientsPage> {
                     const AdminHeader(),
                     Padding(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       child: SearchField(
                         controller: _searchController,
                         hintText: LocaleKeys.search_patient_hint.tr(),
@@ -76,8 +79,7 @@ class _AdminPatientsPageState extends ConsumerState<AdminPatientsPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
-                    (context, index) =>
-                        _PatientCard(patient: filtered[index]),
+                    (context, index) => _PatientCard(patient: filtered[index]),
                     childCount: filtered.length,
                   ),
                 ),
@@ -122,8 +124,7 @@ class _PatientCard extends StatelessWidget {
                 context.push('/admin-patient-detail', extra: patient),
             icon: Icons.remove_red_eye,
             height: 40,
-            width: 90,
-            fontSize: 13,
+            width: 120,
             borderRadius: 10,
           ),
           const Spacer(),
@@ -133,22 +134,25 @@ class _PatientCard extends StatelessWidget {
               Text(
                 patient.name,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: AppColors.teal,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  color: AppColors.teal,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Text(patient.id.isNotEmpty
-                      ? patient.id.substring(0, 6).toUpperCase()
-                      : '---'),
+                  Text(
+                    patient.id.isNotEmpty
+                        ? patient.id.substring(0, 6).toUpperCase()
+                        : '---',
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     'ID',
                     style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[600]),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[600],
+                    ),
                   ),
                 ],
               ),
@@ -157,8 +161,7 @@ class _PatientCard extends StatelessWidget {
                 children: [
                   Text(patient.phone),
                   const SizedBox(width: 6),
-                  Icon(Icons.phone_in_talk,
-                      size: 16, color: Colors.grey[600]),
+                  Icon(Icons.phone_in_talk, size: 16, color: Colors.grey[600]),
                 ],
               ),
             ],
@@ -181,7 +184,6 @@ class _PatientCard extends StatelessWidget {
 }
 
 class _TotalCard extends StatelessWidget {
-
   const _TotalCard({
     required this.label,
     required this.count,
@@ -208,17 +210,16 @@ class _TotalCard extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               Text(
                 count.toString(),
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: AppColors.teal,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  color: AppColors.teal,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),

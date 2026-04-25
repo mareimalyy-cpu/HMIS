@@ -34,8 +34,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
   }
 
   void _onScroll() {
-    if (_scroll.position.pixels >=
-        _scroll.position.maxScrollExtent - 250) {
+    if (_scroll.position.pixels >= _scroll.position.maxScrollExtent - 250) {
       ref.read(notificationsProvider.notifier).loadMore();
     }
   }
@@ -79,66 +78,69 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
         data: (state) {
           final grouped = state.grouped;
 
-          if (grouped.isEmpty && !state.isLoading) {
-            return const NotificationEmptyState();
-          }
-
           return RefreshIndicator(
             color: AppColors.teal,
-            onRefresh: () =>
-                ref.read(notificationsProvider.notifier).refresh(),
-            child: CustomScrollView(
-              controller: _scroll,
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                for (final entry in grouped.entries) ...[
-                  SliverToBoxAdapter(
-                    child: _DayHeader(label: _resolveLabel(entry.key)),
-                  ),
-                  SliverList.builder(
-                    itemCount: entry.value.length,
-                    itemBuilder: (context, i) {
-                      final n = entry.value[i];
-                      return NotificationCard(
-                        notification: n,
-                        onTap: () => _handleTap(n),
-                        onDismiss: () => ref
-                            .read(notificationsProvider.notifier)
-                            .deleteNotification(n.id),
-                      );
-                    },
-                  ),
-                ],
-                if (state.isLoadingMore)
-                  const SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          color: AppColors.teal,
-                          strokeWidth: 2,
+            onRefresh: () => ref.read(notificationsProvider.notifier).refresh(),
+            child: grouped.isEmpty && !state.isLoading
+                ? const CustomScrollView(
+                    physics: AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      SliverFillRemaining(child: NotificationEmptyState()),
+                    ],
+                  )
+                : CustomScrollView(
+                    controller: _scroll,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      for (final entry in grouped.entries) ...[
+                        SliverToBoxAdapter(
+                          child: _DayHeader(label: _resolveLabel(entry.key)),
                         ),
-                      ),
-                    ),
-                  ),
-                if (!state.hasMore && grouped.isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 24),
-                      child: Center(
-                        child: Text(
-                          "You've seen all notifications",
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.lightTextSecondary,
+                        SliverList.builder(
+                          itemCount: entry.value.length,
+                          itemBuilder: (context, i) {
+                            final n = entry.value[i];
+                            return NotificationCard(
+                              notification: n,
+                              onTap: () => _handleTap(n),
+                              onDismiss: () => ref
+                                  .read(notificationsProvider.notifier)
+                                  .deleteNotification(n.id),
+                            );
+                          },
+                        ),
+                      ],
+                      if (state.isLoadingMore)
+                        const SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.all(20),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.teal,
+                                strokeWidth: 2,
                               ),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
+                      if (!state.hasMore && grouped.isNotEmpty)
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 24),
+                            child: Center(
+                              child: Text(
+                                "You've seen all notifications",
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: AppColors.lightTextSecondary,
+                                    ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      // Bottom safe-area padding
+                      const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                    ],
                   ),
-                // Bottom safe-area padding
-                const SliverToBoxAdapter(child: SizedBox(height: 24)),
-              ],
-            ),
           );
         },
       ),
@@ -174,10 +176,10 @@ class _DayHeader extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: AppColors.lightTextSecondary,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
-            ),
+          color: AppColors.lightTextSecondary,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }

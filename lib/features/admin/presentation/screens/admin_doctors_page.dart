@@ -6,6 +6,7 @@ import '../../../../generated/locale_keys.g.dart';
 
 import '../../../../core/themes/app_colors.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_dialog.dart';
 import '../../../../core/widgets/my_text_filed.dart';
 import '../../../../core/widgets/search_field.dart';
 import '../../../auth/data/models/user_model.dart';
@@ -38,32 +39,30 @@ class _AdminDoctorsPageState extends ConsumerState<AdminDoctorsPage>
     super.dispose();
   }
 
-  Future<void> _confirmDelete(UserModel doctor) async {
-    final confirmed = await showDialog<bool>(
+  void _confirmDelete(UserModel doctor) {
+    AppDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(LocaleKeys.delete_doctor.tr()),
-        content: Text(LocaleKeys.delete_doctor_confirm
-            .tr(namedArgs: {'name': doctor.name})),
-        actions: [
-          AppButton.outlined(
-            text: LocaleKeys.cancelButton.tr(),
-            onPressed: () => Navigator.pop(ctx, false),
-            height: 40,
-            width: null,
-          ),
-          AppButton.danger(
-            text: LocaleKeys.delete.tr(),
-            onPressed: () => Navigator.pop(ctx, true),
-            height: 40,
-            width: null,
-          ),
-        ],
-      ),
+      title: LocaleKeys.delete_doctor.tr(),
+      icon: Icons.delete_outline_rounded,
+      iconColor: AppColors.danger,
+      content: LocaleKeys.delete_doctor_confirm
+          .tr(namedArgs: {'name': doctor.name}),
+      actions: [
+        AppDialogAction(
+          label: LocaleKeys.cancelButton.tr(),
+          type: AppButtonType.outlined,
+          onPressed: () => Navigator.pop(context),
+        ),
+        AppDialogAction(
+          label: LocaleKeys.delete.tr(),
+          type: AppButtonType.danger,
+          onPressed: () {
+            Navigator.pop(context);
+            ref.read(adminProvider.notifier).deleteDoctor(doctor.id);
+          },
+        ),
+      ],
     );
-    if (confirmed == true && mounted) {
-      ref.read(adminProvider.notifier).deleteDoctor(doctor.id);
-    }
   }
 
   void _showEditSheet(UserModel doctor) {
@@ -81,62 +80,55 @@ class _AdminDoctorsPageState extends ConsumerState<AdminDoctorsPage>
     );
   }
 
-  Future<void> _confirmApprove(UserModel doctor, String adminId) async {
-    final confirmed = await showDialog<bool>(
+  void _confirmApprove(UserModel doctor, String adminId) {
+    AppDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(LocaleKeys.approve.tr()),
-        content: Text(
+      title: LocaleKeys.approve.tr(),
+      icon: Icons.check_circle_outline_rounded,
+      iconColor: AppColors.teal,
+      content:
           '${LocaleKeys.approve.tr()} ${LocaleKeys.dr_prefix.tr(namedArgs: {'name': doctor.name})}?',
+      actions: [
+        AppDialogAction(
+          label: LocaleKeys.cancelButton.tr(),
+          type: AppButtonType.outlined,
+          onPressed: () => Navigator.pop(context),
         ),
-        actions: [
-          AppButton.outlined(
-            text: LocaleKeys.cancelButton.tr(),
-            onPressed: () => Navigator.pop(ctx, false),
-            height: 40,
-            width: null,
-          ),
-          AppButton(
-            text: LocaleKeys.approve.tr(),
-            onPressed: () => Navigator.pop(ctx, true),
-            height: 40,
-            width: null,
-          ),
-        ],
-      ),
+        AppDialogAction(
+          label: LocaleKeys.approve.tr(),
+          onPressed: () {
+            Navigator.pop(context);
+            ref.read(adminProvider.notifier).approveDoctor(doctor.id, adminId);
+          },
+        ),
+      ],
     );
-    if (confirmed == true && mounted) {
-      ref.read(adminProvider.notifier).approveDoctor(doctor.id, adminId);
-    }
   }
 
-  Future<void> _confirmReject(UserModel doctor, String adminId) async {
-    final confirmed = await showDialog<bool>(
+  void _confirmReject(UserModel doctor, String adminId) {
+    AppDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(LocaleKeys.reject.tr()),
-        content: Text(
+      title: LocaleKeys.reject.tr(),
+      icon: Icons.cancel_outlined,
+      iconColor: AppColors.danger,
+      content:
           '${LocaleKeys.reject.tr()} ${LocaleKeys.dr_prefix.tr(namedArgs: {'name': doctor.name})}?',
+      actions: [
+        AppDialogAction(
+          label: LocaleKeys.cancelButton.tr(),
+          type: AppButtonType.outlined,
+          onPressed: () => Navigator.pop(context),
         ),
-        actions: [
-          AppButton.outlined(
-            text: LocaleKeys.cancelButton.tr(),
-            onPressed: () => Navigator.pop(ctx, false),
-            height: 40,
-            width: null,
-          ),
-          AppButton.danger(
-            text: LocaleKeys.reject.tr(),
-            onPressed: () => Navigator.pop(ctx, true),
-            height: 40,
-            width: null,
-          ),
-        ],
-      ),
+        AppDialogAction(
+          label: LocaleKeys.reject.tr(),
+          type: AppButtonType.danger,
+          onPressed: () {
+            Navigator.pop(context);
+            ref.read(adminProvider.notifier).rejectDoctor(doctor.id, adminId);
+          },
+        ),
+      ],
     );
-    if (confirmed == true && mounted) {
-      ref.read(adminProvider.notifier).rejectDoctor(doctor.id, adminId);
-    }
   }
 
   @override
@@ -173,65 +165,78 @@ class _AdminDoctorsPageState extends ConsumerState<AdminDoctorsPage>
                     d.phone.contains(_query))
                 .toList();
 
-        return RefreshIndicator(
-          onRefresh: () => ref.read(adminProvider.notifier).refresh(),
-          child: Column(
-            children: [
-              const AdminHeader(),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: SearchField(
-                  controller: _searchController,
-                  hintText: LocaleKeys.search_doctor_hint.tr(),
-                  onChanged: (v) => setState(() => _query = v),
-                ),
+        return Column(
+          children: [
+            const AdminHeader(),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: SearchField(
+                controller: _searchController,
+                hintText: LocaleKeys.search_doctor_hint.tr(),
+                onChanged: (v) => setState(() => _query = v),
               ),
-              TabBar(
-                controller: _tabController,
-                labelColor: AppColors.teal,
-                unselectedLabelColor: Colors.grey,
-                indicatorColor: AppColors.teal,
-                tabs: [
-                  Tab(text: LocaleKeys.approved_doctors.tr()),
-                  Tab(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(LocaleKeys.pending_doctors.tr()),
-                        if (state.pendingDoctors.isNotEmpty) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.orange,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              state.pendingDoctors.length.toString(),
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold),
-                            ),
+            ),
+            TabBar(
+              controller: _tabController,
+              labelColor: AppColors.teal,
+              unselectedLabelColor: Colors.grey,
+              indicatorColor: AppColors.teal,
+              tabs: [
+                Tab(text: LocaleKeys.approved_doctors.tr()),
+                Tab(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(LocaleKeys.pending_doctors.tr()),
+                      if (state.pendingDoctors.isNotEmpty) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.orange,
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                        ],
+                          child: Text(
+                            state.pendingDoctors.length.toString(),
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
                       ],
-                    ),
+                    ],
                   ),
-                ],
-              ),
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    // ─── Approved doctors ─────────────────────────
-                    filteredApproved.isEmpty
-                        ? Center(
-                            child: Text(LocaleKeys.no_doctors_found.tr(),
-                                style: const TextStyle(color: Colors.grey)))
+                ),
+              ],
+            ),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  // ─── Approved doctors ─────────────────────────
+                  RefreshIndicator(
+                    onRefresh: () => ref.read(adminProvider.notifier).refresh(),
+                    color: AppColors.teal,
+                    child: filteredApproved.isEmpty
+                        ? CustomScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            slivers: [
+                              SliverFillRemaining(
+                                child: Center(
+                                  child: Text(
+                                    LocaleKeys.no_doctors_found.tr(),
+                                    style:
+                                        const TextStyle(color: Colors.grey),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
                         : ListView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(),
                             padding: const EdgeInsets.all(16),
                             itemCount: filteredApproved.length,
                             itemBuilder: (_, i) => _DoctorCard(
@@ -243,16 +248,29 @@ class _AdminDoctorsPageState extends ConsumerState<AdminDoctorsPage>
                                   _showEditSheet(filteredApproved[i]),
                             ),
                           ),
+                  ),
 
-                    // ─── Pending doctors ──────────────────────────
-                    filteredPending.isEmpty
-                        ? Center(
-                            child: Text(
-                              LocaleKeys.no_doctors_found.tr(),
-                              style: const TextStyle(color: Colors.grey),
-                            ),
+                  // ─── Pending doctors ──────────────────────────
+                  RefreshIndicator(
+                    onRefresh: () => ref.read(adminProvider.notifier).refresh(),
+                    color: AppColors.teal,
+                    child: filteredPending.isEmpty
+                        ? CustomScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            slivers: [
+                              SliverFillRemaining(
+                                child: Center(
+                                  child: Text(
+                                    LocaleKeys.no_doctors_found.tr(),
+                                    style:
+                                        const TextStyle(color: Colors.grey),
+                                  ),
+                                ),
+                              ),
+                            ],
                           )
                         : ListView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(),
                             padding: const EdgeInsets.all(16),
                             itemCount: filteredPending.length,
                             itemBuilder: (_, i) => _PendingDoctorCard(
@@ -264,11 +282,11 @@ class _AdminDoctorsPageState extends ConsumerState<AdminDoctorsPage>
                                   _confirmReject(filteredPending[i], adminId),
                             ),
                           ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );

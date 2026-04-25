@@ -1,12 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../core/enum/constants.dart';
-import '../../../../core/local_services/local_storage.dart';
-import '../../../../features/auth/data/models/user_model.dart';
+import '../../../../features/auth/presentation/providers/auth_provider.dart';
 import '../../data/models/notification_states.dart';
 import '../../data/services/notification_firestore_service.dart';
 
@@ -21,7 +18,12 @@ class NotificationsNotifier extends _$NotificationsNotifier {
   @override
   Future<NotificationsStates> build() async {
     _service = NotificationFirestoreService();
-    _userId = _resolveUserId();
+
+    // Watch authProvider so the provider rebuilds whenever the user changes
+    // (login, logout, or account switch). Prevents a logged-out user's
+    // userId from leaking into the next session.
+    final authState = ref.watch(authProvider);
+    _userId = authState.value?.currentUser?.id;
 
     if (_userId == null || _userId!.isEmpty) {
       return NotificationsStates.initial();
@@ -135,19 +137,6 @@ class NotificationsNotifier extends _$NotificationsNotifier {
     );
   }
 
-  // ─── Private ───────────────────────────────────────────────────────────────
-
-  String? _resolveUserId() {
-    final raw = LocalStorage.instance.get(Constants.userData.name);
-    if (raw == null) return null;
-    try {
-      final map = jsonDecode(raw as String) as Map<String, dynamic>;
-      return UserModel.fromJson(map).id;
-    } catch (e) {
-      log('Could not resolve user ID for notifications: $e');
-      return null;
-    }
-  }
 }
 
 // Shell pages read the unread count with:

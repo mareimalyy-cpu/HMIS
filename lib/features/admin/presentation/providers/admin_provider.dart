@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'dart:developer';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../auth/data/models/user_model.dart';
 import '../../../booking/data/models/appointment_model.dart';
+import '../../../notifications/data/models/notification_model.dart';
+import '../../../notifications/data/services/notification_firestore_service.dart';
 import '../../data/models/admin_states.dart';
 import '../../data/services/remote/admin_remote_service.dart';
 
@@ -12,10 +15,12 @@ part 'generated/admin_provider.g.dart';
 @Riverpod(keepAlive: true)
 class Admin extends _$Admin {
   late final AdminRemoteService _remoteService;
+  late final NotificationFirestoreService _notifService;
 
   @override
   Future<AdminStates> build() async {
     _remoteService = AdminRemoteService();
+    _notifService = NotificationFirestoreService();
     return _fetchAll();
   }
 
@@ -43,6 +48,14 @@ class Admin extends _$Admin {
     state = AsyncData(state.value!.copyWith(isLoading: true, clearError: true));
     try {
       await _remoteService.approveDoctor(doctorId, adminId);
+      unawaited(_notifService.send(
+        userId: doctorId,
+        title: 'تمت الموافقة على طلبك 🎉',
+        body: 'أهلاً بك! يمكنك الآن تسجيل الدخول والبدء في استخدام التطبيق.',
+        type: NotificationType.approval,
+        priority: NotificationPriority.high,
+        route: '/doctor-home',
+      ));
       final pending = state.value!.pendingDoctors;
       final approved = pending.firstWhere((d) => d.id == doctorId);
       final updatedApproved = approved.copyWith(
@@ -69,6 +82,13 @@ class Admin extends _$Admin {
     state = AsyncData(state.value!.copyWith(isLoading: true, clearError: true));
     try {
       await _remoteService.rejectDoctor(doctorId, adminId);
+      unawaited(_notifService.send(
+        userId: doctorId,
+        title: 'تم رفض طلبك',
+        body: 'نأسف، لم تتم الموافقة على طلبك. تواصل مع الإدارة للمزيد من المعلومات.',
+        type: NotificationType.approval,
+        priority: NotificationPriority.high,
+      ));
       state = AsyncData(state.value!.copyWith(
         pendingDoctors: state.value!.pendingDoctors
             .where((d) => d.id != doctorId)

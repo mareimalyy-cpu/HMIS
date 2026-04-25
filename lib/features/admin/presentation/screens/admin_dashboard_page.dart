@@ -7,17 +7,59 @@ import '../../../../core/services/helper.dart';
 import '../../../../generated/locale_keys.g.dart';
 
 import '../../../../core/themes/app_colors.dart';
-import '../../../../core/widgets/app_button.dart';
 import '../../../booking/data/models/appointment_model.dart';
 import '../providers/admin_provider.dart';
 import '../widgets/admin_header.dart';
 
-class AdminDashboardPage extends ConsumerWidget {
+class AdminDashboardPage extends ConsumerStatefulWidget {
   const AdminDashboardPage({super.key});
 
   @override
+  ConsumerState<AdminDashboardPage> createState() => _AdminDashboardPageState();
+}
 
-  Widget build(BuildContext context, WidgetRef ref) {
+class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage>
+    with TickerProviderStateMixin {
+  late final AnimationController _statsCtrl;
+  late final AnimationController _chartCtrl;
+  late final List<Animation<double>> _statAnims;
+
+  @override
+  void initState() {
+    super.initState();
+    _statsCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _chartCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+
+    _statAnims = List.generate(3, (i) {
+      final start = i * 0.2;
+      final end = (start + 0.6).clamp(0.0, 1.0);
+      return CurvedAnimation(
+        parent: _statsCtrl,
+        curve: Interval(start, end, curve: Curves.easeOutBack),
+      );
+    });
+
+    _statsCtrl.forward();
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) _chartCtrl.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _statsCtrl.dispose();
+    _chartCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final asyncState = ref.watch(adminProvider);
 
     ref.listen(adminProvider, (_, next) {
@@ -27,8 +69,7 @@ class AdminDashboardPage extends ConsumerWidget {
 
     return asyncState.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) =>
-          Center(child: Text('${LocaleKeys.error_e.tr()}: $e')),
+      error: (e, _) => Center(child: Text('${LocaleKeys.error_e.tr()}: $e')),
       data: (state) => RefreshIndicator(
         onRefresh: () => ref.read(adminProvider.notifier).refresh(),
         child: CustomScrollView(
@@ -40,29 +81,32 @@ class AdminDashboardPage extends ConsumerWidget {
                 child: Row(
                   children: [
                     Expanded(
-                      child: _StatCard(
+                      child: _AnimatedStatCard(
+                        animation: _statAnims[0],
                         label: LocaleKeys.doctors_count.tr(),
                         count: state.doctorCount,
                         icon: Icons.medical_services_rounded,
-                        color: const Color(0xFF5BC8C8),
+                        gradientColors: const [Color(0xFF2096A4), Color(0xFF1B8A9E)],
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 10),
                     Expanded(
-                      child: _StatCard(
+                      child: _AnimatedStatCard(
+                        animation: _statAnims[1],
                         label: LocaleKeys.patients_count.tr(),
                         count: state.patientCount,
                         icon: Icons.people_alt_rounded,
-                        color: const Color(0xFF4ABCCA),
+                        gradientColors: const [Color(0xFF4ABCCA), Color(0xFF2096A4)],
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 10),
                     Expanded(
-                      child: _StatCard(
+                      child: _AnimatedStatCard(
+                        animation: _statAnims[2],
                         label: LocaleKeys.appointments_stat.tr(),
                         count: state.appointmentCount,
                         icon: Icons.calendar_today_rounded,
-                        color: const Color(0xFF7BCFCF),
+                        gradientColors: const [Color(0xFF7BCFCF), Color(0xFF4ABCCA)],
                       ),
                     ),
                   ],
@@ -71,29 +115,70 @@ class AdminDashboardPage extends ConsumerWidget {
             ),
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                child: _AppointmentsChart(appointments: state.appointments),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                child: Text(
-                  LocaleKeys.all_appointments_title.tr(),
-                  textAlign: TextAlign.right,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.teal,
-                        fontWeight: FontWeight.bold,
-                      ),
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                child: FadeTransition(
+                  opacity: _chartCtrl,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.15),
+                      end: Offset.zero,
+                    ).animate(CurvedAnimation(
+                      parent: _chartCtrl,
+                      curve: Curves.easeOutCubic,
+                    )),
+                    child: _AppointmentsChart(appointments: state.appointments),
+                  ),
                 ),
               ),
             ),
             SliverToBoxAdapter(
-              child: _AppointmentsTable(
-                appointments: state.appointments,
-                isLoading: state.isLoading,
-                onDelete: (appt) =>
-                    ref.read(adminProvider.notifier).deleteAppointment(appt.id),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+                child: Row(
+                  children: [
+                    Text(
+                      LocaleKeys.all_appointments_title.tr(),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: AppColors.teal,
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.teal.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${state.appointments.length}',
+                        style: const TextStyle(
+                          color: AppColors.teal,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              sliver: SliverList.builder(
+                itemCount: state.appointments.length,
+                itemBuilder: (context, i) {
+                  final appt = state.appointments[i];
+                  return _AnimatedAppointmentCard(
+                    index: i,
+                    appt: appt,
+                    isGlobalLoading: state.isLoading,
+                    onDelete: () => ref
+                        .read(adminProvider.notifier)
+                        .deleteAppointment(appt.id),
+                  );
+                },
               ),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
@@ -104,57 +189,89 @@ class AdminDashboardPage extends ConsumerWidget {
   }
 }
 
-class _StatCard extends StatelessWidget {
+// ─── Animated Stat Card ───────────────────────────────────────────────────────
 
-  const _StatCard({
+class _AnimatedStatCard extends AnimatedWidget {
+  const _AnimatedStatCard({
+    required Animation<double> animation,
     required this.label,
     required this.count,
     required this.icon,
-    required this.color,
-  });
+    required this.gradientColors,
+  }) : super(listenable: animation);
+
   final String label;
   final int count;
   final IconData icon;
-  final Color color;
+  final List<Color> gradientColors;
+
+  Animation<double> get _anim => listenable as Animation<double>;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, size: 28, color: Colors.white),
-          const SizedBox(height: 6),
-          Text(
-            count.toString(),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
+    final v = _anim.value.clamp(0.0, 1.0);
+    return Transform.scale(
+      scale: _anim.value,
+      child: Opacity(
+        opacity: v,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: gradientColors,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: gradientColors[0].withValues(alpha: 0.40),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 22, color: Colors.white),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                count.toString(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  height: 1,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _AppointmentsChart extends StatelessWidget {
+// ─── Chart ────────────────────────────────────────────────────────────────────
 
+class _AppointmentsChart extends StatelessWidget {
   const _AppointmentsChart({required this.appointments});
   final List<AppointmentModel> appointments;
 
@@ -183,38 +300,40 @@ class _AppointmentsChart extends StatelessWidget {
     final counts = _getWeekdayCounts();
     final maxVal =
         counts.values.fold(0, max).clamp(1, double.maxFinite).toInt();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.card(context),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.07),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 10,
-                    height: 10,
-                    decoration: const BoxDecoration(
-                      color: AppColors.teal,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(LocaleKeys.appointments_stat.tr(),
-                      style: const TextStyle(fontSize: 12)),
-                ],
+              Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: AppColors.teal,
+                  shape: BoxShape.circle,
+                ),
               ),
+              const SizedBox(width: 6),
               Text(
                 LocaleKeys.appointments_stat.tr(),
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
             ],
           ),
@@ -222,7 +341,11 @@ class _AppointmentsChart extends StatelessWidget {
           SizedBox(
             height: 160,
             child: CustomPaint(
-              painter: _ChartPainter(counts: counts, maxVal: maxVal),
+              painter: _ChartPainter(
+                counts: counts,
+                maxVal: maxVal,
+                isDark: isDark,
+              ),
               size: Size.infinite,
             ),
           ),
@@ -233,10 +356,14 @@ class _AppointmentsChart extends StatelessWidget {
 }
 
 class _ChartPainter extends CustomPainter {
-
-  _ChartPainter({required this.counts, required this.maxVal});
+  _ChartPainter({
+    required this.counts,
+    required this.maxVal,
+    required this.isDark,
+  });
   final Map<String, int> counts;
   final int maxVal;
+  final bool isDark;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -244,18 +371,14 @@ class _ChartPainter extends CustomPainter {
     final barWidth = size.width / keys.length;
     final chartH = size.height - 24;
 
-    final barPaint = Paint()
-      ..color = AppColors.teal.withValues(alpha: 0.25)
-      ..style = PaintingStyle.fill;
-
-    final linePaint = Paint()
-      ..color = AppColors.teal
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-
-    final dotPaint = Paint()
-      ..color = AppColors.teal
-      ..style = PaintingStyle.fill;
+    // Horizontal grid lines
+    final gridPaint = Paint()
+      ..color = (isDark ? Colors.white : Colors.black).withValues(alpha: 0.07)
+      ..strokeWidth = 1;
+    for (var i = 0; i <= 4; i++) {
+      final y = chartH * (1 - i / 4);
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
 
     final List<Offset> points = [];
 
@@ -268,9 +391,20 @@ class _ChartPainter extends CustomPainter {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           Rect.fromLTWH(x - barWidth * 0.3, top, barWidth * 0.6, barH),
-          const Radius.circular(4),
+          const Radius.circular(5),
         ),
-        barPaint,
+        Paint()
+          ..shader = LinearGradient(
+            colors: [
+              AppColors.teal.withValues(alpha: 0.30),
+              AppColors.teal.withValues(alpha: 0.06),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ).createShader(
+            Rect.fromLTWH(x - barWidth * 0.3, top, barWidth * 0.6, barH),
+          )
+          ..style = PaintingStyle.fill,
       );
 
       points.add(Offset(x, top));
@@ -278,100 +412,137 @@ class _ChartPainter extends CustomPainter {
       final tp = TextPainter(
         text: TextSpan(
           text: keys[i],
-          style: const TextStyle(color: Colors.grey, fontSize: 10),
+          style: TextStyle(
+            color: isDark ? Colors.grey[400] : Colors.grey[600],
+            fontSize: 9,
+          ),
         ),
         textDirection: TextDirection.ltr,
       )..layout();
-      tp.paint(canvas, Offset(x - tp.width / 2, chartH + 6));
+      tp.paint(canvas, Offset(x - tp.width / 2, chartH + 8));
     }
 
     if (points.length > 1) {
+      // Smooth cubic bezier line
       final path = Path()..moveTo(points[0].dx, points[0].dy);
-      for (var i = 1; i < points.length; i++) {
-        path.lineTo(points[i].dx, points[i].dy);
+      for (var i = 0; i < points.length - 1; i++) {
+        final p0 = points[i];
+        final p1 = points[i + 1];
+        final cpX = (p0.dx + p1.dx) / 2;
+        path.cubicTo(cpX, p0.dy, cpX, p1.dy, p1.dx, p1.dy);
       }
-      canvas.drawPath(path, linePaint);
+
+      // Gradient fill under curve
+      final fillPath = Path.from(path)
+        ..lineTo(points.last.dx, chartH)
+        ..lineTo(points.first.dx, chartH)
+        ..close();
+      canvas.drawPath(
+        fillPath,
+        Paint()
+          ..shader = LinearGradient(
+            colors: [
+              AppColors.teal.withValues(alpha: 0.22),
+              AppColors.teal.withValues(alpha: 0.0),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ).createShader(Rect.fromLTWH(0, 0, size.width, chartH))
+          ..style = PaintingStyle.fill,
+      );
+
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = AppColors.teal
+          ..strokeWidth = 2.5
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round,
+      );
     }
 
+    // Dots — white ring + teal fill
     for (final p in points) {
-      canvas.drawCircle(p, 4, dotPaint);
+      canvas.drawCircle(p, 5.5, Paint()..color = Colors.white);
+      canvas.drawCircle(p, 3.5, Paint()..color = AppColors.teal);
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _ChartPainter old) =>
+      old.counts != counts || old.maxVal != maxVal || old.isDark != isDark;
 }
 
-class _AppointmentsTable extends StatelessWidget {
+// ─── Animated Appointment Card ────────────────────────────────────────────────
 
-  const _AppointmentsTable({
-    required this.appointments,
-    required this.isLoading,
+class _AnimatedAppointmentCard extends StatefulWidget {
+  const _AnimatedAppointmentCard({
+    required this.index,
+    required this.appt,
+    required this.isGlobalLoading,
     required this.onDelete,
   });
-  final List<AppointmentModel> appointments;
-  final bool isLoading;
-  final void Function(AppointmentModel) onDelete;
+
+  final int index;
+  final AppointmentModel appt;
+  final bool isGlobalLoading;
+  final VoidCallback onDelete;
+
+  @override
+  State<_AnimatedAppointmentCard> createState() =>
+      _AnimatedAppointmentCardState();
+}
+
+class _AnimatedAppointmentCardState extends State<_AnimatedAppointmentCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _fade;
+  late final Animation<Offset> _slide;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 420),
+    );
+    _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
+    _slide = Tween<Offset>(
+      begin: const Offset(0, 0.25),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
+
+    final delay = Duration(milliseconds: 70 * min(widget.index, 8));
+    Future.delayed(delay, () {
+      if (mounted) _ctrl.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        children: [
-          Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: AppColors.card(context),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                    child: Text(LocaleKeys.col_name.tr(),
-                        textAlign: TextAlign.center,
-                        style:
-                            const TextStyle(fontWeight: FontWeight.bold))),
-                Expanded(
-                    child: Text(LocaleKeys.col_doctor.tr(),
-                        textAlign: TextAlign.center,
-                        style:
-                            const TextStyle(fontWeight: FontWeight.bold))),
-                Expanded(
-                    child: Text(LocaleKeys.col_schedule.tr(),
-                        textAlign: TextAlign.center,
-                        style:
-                            const TextStyle(fontWeight: FontWeight.bold))),
-                Expanded(
-                    child: Text(LocaleKeys.col_clinic_location.tr(),
-                        textAlign: TextAlign.center,
-                        style:
-                            const TextStyle(fontWeight: FontWeight.bold))),
-                Expanded(
-                    child: Text(LocaleKeys.col_bookings.tr(),
-                        textAlign: TextAlign.center,
-                        style:
-                            const TextStyle(fontWeight: FontWeight.bold))),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          ...appointments.map((appt) => _AppointmentRow(
-                appt: appt,
-                isGlobalLoading: isLoading,
-                onDelete: () => onDelete(appt),
-              )),
-        ],
+    return FadeTransition(
+      opacity: _fade,
+      child: SlideTransition(
+        position: _slide,
+        child: _AppointmentCard(
+          appt: widget.appt,
+          isGlobalLoading: widget.isGlobalLoading,
+          onDelete: widget.onDelete,
+        ),
       ),
     );
   }
 }
 
-class _AppointmentRow extends StatelessWidget {
-
-  const _AppointmentRow({
+class _AppointmentCard extends StatelessWidget {
+  const _AppointmentCard({
     required this.appt,
     required this.isGlobalLoading,
     required this.onDelete,
@@ -382,70 +553,113 @@ class _AppointmentRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark
-            ? Colors.grey[800]
-            : Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
+        color: isDark ? Colors.grey[850] : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          Expanded(
+          CircleAvatar(
+            radius: 22,
+            backgroundColor: AppColors.teal.withValues(alpha: 0.15),
             child: Text(
-              appt.patientName,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.teal, fontSize: 12),
+              appt.patientName.isNotEmpty
+                  ? appt.patientName[0].toUpperCase()
+                  : '?',
+              style: const TextStyle(
+                color: AppColors.teal,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
             ),
           ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(appt.doctorName,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 11)),
-                Text(appt.doctorSpecialty,
-                    textAlign: TextAlign.center,
-                    style:
-                        const TextStyle(fontSize: 10, color: Colors.grey)),
+                Text(
+                  appt.patientName,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 13),
+                ),
+                const SizedBox(height: 5),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: [
+                    _InfoChip(
+                        icon: Icons.person_outline, label: appt.doctorName),
+                    _InfoChip(
+                        icon: Icons.event_outlined,
+                        label: '${appt.date}  ${appt.time}'),
+                    if (appt.address != null && appt.address!.isNotEmpty)
+                      _InfoChip(
+                          icon: Icons.place_outlined, label: appt.address!),
+                  ],
+                ),
               ],
             ),
           ),
-          Expanded(
-            child: Column(
-              children: [
-                Text(appt.date,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 11)),
-                Text(appt.time,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 11)),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Text(appt.address ?? '---',
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 11)),
-          ),
-          Expanded(
-            child: isGlobalLoading
-                ? const Center(
-                    child: SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  )
-                : AppButton.danger(
-                    text: LocaleKeys.delete_booking.tr(),
-                    onPressed: onDelete,
-                    height: 36,
-                    borderRadius: 8,
-                    fontSize: 11,
+          const SizedBox(width: 4),
+          isGlobalLoading
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.danger,
                   ),
+                )
+              : IconButton(
+                  onPressed: onDelete,
+                  icon: const Icon(Icons.delete_outline_rounded),
+                  color: AppColors.danger,
+                  iconSize: 22,
+                  tooltip: LocaleKeys.delete_booking.tr(),
+                ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  const _InfoChip({required this.icon, required this.label});
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.grey[800] : Colors.grey[100],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: AppColors.teal),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: isDark ? Colors.grey[300] : Colors.grey[700],
+            ),
           ),
         ],
       ),
