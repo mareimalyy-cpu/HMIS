@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/local_services/local_storage.dart';
+import '../../../../core/notifications/remote_notifications_service.dart';
 import '../../../notifications/data/models/notification_model.dart';
 import '../../../notifications/data/services/notification_firestore_service.dart';
 import '../../data/models/auth_states.dart';
@@ -81,6 +82,7 @@ class Auth extends _$Auth {
     try {
       final user = await _remoteService.login(email: email, password: password);
       unawaited(_localService.saveUser(user));
+      unawaited(FirebaseMessagingService.instance.saveTokenForUser(user.id));
       // Doctors pending approval cannot access the app
       final isApproved = user.role != UserRole.doctor || user.isApprovedDoctor;
       state = AsyncData(
@@ -369,6 +371,10 @@ class Auth extends _$Auth {
 
   Future<void> logout() async {
     try {
+      final userId = state.value?.currentUser?.id;
+      if (userId != null) {
+        unawaited(FirebaseMessagingService.instance.deleteTokenForUser(userId));
+      }
       await _remoteService.logout();
       await _localService.clearUser();
       state = AsyncData(AuthStates.initial());

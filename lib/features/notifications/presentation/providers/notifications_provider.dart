@@ -11,17 +11,16 @@ part 'generated/notifications_provider.g.dart';
 
 @Riverpod(keepAlive: true)
 class NotificationsNotifier extends _$NotificationsNotifier {
-  late final NotificationFirestoreService _service;
+  // Initialized as a field — never re-assigned when build() reruns.
+  final _service = NotificationFirestoreService();
   StreamSubscription<int>? _unreadSub;
   String? _userId;
 
   @override
   Future<NotificationsStates> build() async {
-    _service = NotificationFirestoreService();
-
     // Watch authProvider so the provider rebuilds whenever the user changes
-    // (login, logout, or account switch). Prevents a logged-out user's
-    // userId from leaking into the next session.
+    // (login, logout, or account switch). Prevents a stale userId from
+    // leaking into a new session.
     final authState = ref.watch(authProvider);
     _userId = authState.value?.currentUser?.id;
 

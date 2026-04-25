@@ -263,7 +263,19 @@ class CodegenLoader extends AssetLoader{
   "notif_priority_normal": "Normal",
   "notif_priority_high": "High",
   "notif_priority_critical": "Critical",
-  "next": "Next"
+  "next": "Next",
+  "email_verification_title": "Verify Your Email",
+  "check_your_email": "Check Your Email",
+  "email_verification_body": "We sent a verification link to\n{email}\nOpen your email and click the link, then tap Done.",
+  "i_verified": "I've Verified",
+  "resend_email": "Resend Email",
+  "email_resent": "Verification email sent",
+  "back_to_login": "Back to Login",
+  "pending_appointments": "Pending Approval",
+  "mark_completed": "Completed",
+  "mark_no_show": "No Show",
+  "confirm_appt": "Confirm",
+  "reject_appt": "Reject"
 };
 static const Map<String,dynamic> _ar = {
   "hello": "مرحبًا",
@@ -514,7 +526,19 @@ static const Map<String,dynamic> _ar = {
   "notif_priority_normal": "عادي",
   "notif_priority_high": "مرتفع",
   "notif_priority_critical": "حرج",
-  "next": "التالي"
+  "next": "التالي",
+  "email_verification_title": "تفعيل البريد الإلكتروني",
+  "check_your_email": "تحقق من بريدك الإلكتروني",
+  "email_verification_body": "أرسلنا رابط التفعيل إلى\n{email}\nافتح بريدك وانقر على الرابط، ثم اضغط تم التفعيل.",
+  "i_verified": "تم التفعيل",
+  "resend_email": "إعادة إرسال البريد",
+  "email_resent": "تم إرسال بريد التفعيل",
+  "back_to_login": "العودة لتسجيل الدخول",
+  "pending_appointments": "بانتظار الموافقة",
+  "mark_completed": "تم الكشف",
+  "mark_no_show": "لم يحضر",
+  "confirm_appt": "تأكيد",
+  "reject_appt": "رفض"
 };
 static const Map<String, Map<String,dynamic>> mapLocales = {"en": _en, "ar": _ar};
 }

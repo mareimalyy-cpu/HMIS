@@ -68,6 +68,24 @@ class AppointmentModel {
   final String? updatedAt;
   final List<String> attachments;
 
+  /// True when the appointment date is today or already passed.
+  bool get isAppointmentDue {
+    try {
+      final parts = date.split('-');
+      if (parts.length != 3) return false;
+      final apptDate = DateTime(
+        int.parse(parts[0]),
+        int.parse(parts[1]),
+        int.parse(parts[2]),
+      );
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      return !apptDate.isAfter(today);
+    } catch (_) {
+      return false;
+    }
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,

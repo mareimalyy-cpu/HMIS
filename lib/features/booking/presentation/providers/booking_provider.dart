@@ -252,9 +252,8 @@ class Booking extends _$Booking {
     required AppointmentModel appointment,
   }) async {
     try {
-      final appointmentDateTime = DateTime.parse(
-        '${appointment.date} ${appointment.time}',
-      );
+      final appointmentDateTime = DateFormat('yyyy-MM-dd hh:mm a')
+          .parse('${appointment.date} ${appointment.time}');
 
       // Notify doctor of new appointment
       unawaited(_notifService.send(

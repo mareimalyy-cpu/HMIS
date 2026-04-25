@@ -85,6 +85,63 @@ class DoctorHomePage extends ConsumerWidget {
 
               const SizedBox(height: 20),
 
+              // ── Pending Appointments ─────────────────────────
+              if (state.pendingAppointments.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '${state.pendingAppointments.length}',
+                          style: const TextStyle(
+                            color: Colors.orange,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'pending_appointments'.tr(),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: Colors.orange,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: state.pendingAppointments.length,
+                  itemBuilder: (context, index) {
+                    final appt = state.pendingAppointments[index];
+                    return AppointmentCard(
+                      appointment: appt,
+                      showDate: true,
+                      onApprove: () => ref
+                          .read(doctorHomeProvider.notifier)
+                          .approveAppointment(appt.id),
+                      onReject: () => ref
+                          .read(doctorHomeProvider.notifier)
+                          .rejectAppointment(appt.id),
+                    );
+                  },
+                ),
+                const SizedBox(height: 20),
+              ],
+
               // Today's Appointments
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -117,9 +174,35 @@ class DoctorHomePage extends ConsumerWidget {
                   physics: const NeverScrollableScrollPhysics(),
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: state.todayAppointments.length,
-                  itemBuilder: (context, index) => AppointmentCard(
-                    appointment: state.todayAppointments[index],
-                  ),
+                  itemBuilder: (context, index) {
+                    final appt = state.todayAppointments[index];
+                    final isPending = appt.status == 'pending' ||
+                        appt.status == 'scheduled';
+                    final isApproved = appt.status == 'approved';
+                    return AppointmentCard(
+                      appointment: appt,
+                      onApprove: isPending
+                          ? () => ref
+                              .read(doctorHomeProvider.notifier)
+                              .approveAppointment(appt.id)
+                          : null,
+                      onReject: isPending
+                          ? () => ref
+                              .read(doctorHomeProvider.notifier)
+                              .rejectAppointment(appt.id)
+                          : null,
+                      onComplete: isApproved
+                          ? () => ref
+                              .read(doctorHomeProvider.notifier)
+                              .completeAppointment(appt.id)
+                          : null,
+                      onNoShow: isApproved
+                          ? () => ref
+                              .read(doctorHomeProvider.notifier)
+                              .markNoShow(appt.id)
+                          : null,
+                    );
+                  },
                 ),
 
               const SizedBox(height: 20),

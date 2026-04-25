@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -68,13 +70,18 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
       ),
       body: asyncState.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Text(
-            'Could not load notifications: $e',
-            style: const TextStyle(color: AppColors.danger),
-            textAlign: TextAlign.center,
-          ),
-        ),
+        error: (e, _) {
+          log('Failed to load notifications: $e');
+          return Center(
+            child: Text(
+              'Failed to load notifications: $e',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.danger),
+              textAlign: TextAlign.center,
+            ),
+          );
+        },
         data: (state) {
           final grouped = state.grouped;
 
@@ -159,7 +166,12 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
     }
     final route = notification.route;
     if (route == null || route.isEmpty) return;
-    context.go(route);
+    final payload = notification.payload;
+    if (payload.isNotEmpty) {
+      context.go(route, extra: payload);
+    } else {
+      context.go(route);
+    }
   }
 }
 

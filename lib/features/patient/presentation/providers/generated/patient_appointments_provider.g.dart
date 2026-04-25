@@ -35,7 +35,7 @@ final class PatientAppointmentsProvider
 }
 
 String _$patientAppointmentsHash() =>
-    r'5f3202ed0574fa0d2b2823089715ea9b74f7461d';
+    r'67c466261b66f17f0ce83e56c3681f5b3c1e8a51';
 
 abstract class _$PatientAppointments
     extends $AsyncNotifier<PatientAppointmentsStates> {

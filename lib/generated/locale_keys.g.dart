@@ -259,5 +259,10 @@ abstract class  LocaleKeys {
   static const resend_email = 'resend_email';
   static const email_resent = 'email_resent';
   static const back_to_login = 'back_to_login';
+  static const pending_appointments = 'pending_appointments';
+  static const mark_completed = 'mark_completed';
+  static const mark_no_show = 'mark_no_show';
+  static const confirm_appt = 'confirm_appt';
+  static const reject_appt = 'reject_appt';
 
 }

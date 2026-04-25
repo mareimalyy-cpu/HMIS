@@ -258,5 +258,11 @@
   "i_verified": "تم التفعيل",
   "resend_email": "إعادة إرسال البريد",
   "email_resent": "تم إرسال بريد التفعيل",
-  "back_to_login": "العودة لتسجيل الدخول"
+  "back_to_login": "العودة لتسجيل الدخول",
+
+  "pending_appointments": "بانتظار الموافقة",
+  "mark_completed": "تم الكشف",
+  "mark_no_show": "لم يحضر",
+  "confirm_appt": "تأكيد",
+  "reject_appt": "رفض"
 }

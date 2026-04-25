@@ -30,4 +30,32 @@ class DoctorHomeRemoteService {
         .map((doc) => AppointmentModel.fromJson(doc.data()))
         .toList();
   }
+
+  Future<void> approveAppointment(String appointmentId) async {
+    await _firestore.collection('appointments').doc(appointmentId).update({
+      'status': 'approved',
+      'updatedAt': DateTime.now().toIso8601String(),
+    });
+  }
+
+  Future<void> rejectAppointment(String appointmentId) async {
+    await _firestore.collection('appointments').doc(appointmentId).update({
+      'status': 'rejected',
+      'updatedAt': DateTime.now().toIso8601String(),
+    });
+  }
+
+  Future<void> completeAppointment(String appointmentId) async {
+    await _firestore.collection('appointments').doc(appointmentId).update({
+      'status': 'completed',
+      'updatedAt': DateTime.now().toIso8601String(),
+    });
+  }
+
+  Future<void> markNoShow(String appointmentId) async {
+    await _firestore.collection('appointments').doc(appointmentId).update({
+      'status': 'no_show',
+      'updatedAt': DateTime.now().toIso8601String(),
+    });
+  }
 }

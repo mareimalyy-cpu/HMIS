@@ -32,7 +32,7 @@ final class AdminProvider extends $AsyncNotifierProvider<Admin, AdminStates> {
   Admin create() => Admin();
 }
 
-String _$adminHash() => r'b3896f58ef74d7edb719de0d6bc8972bae686d40';
+String _$adminHash() => r'468ca4a5042fc835e428569683340d214ff931f8';
 
 abstract class _$Admin extends $AsyncNotifier<AdminStates> {
   FutureOr<AdminStates> build();

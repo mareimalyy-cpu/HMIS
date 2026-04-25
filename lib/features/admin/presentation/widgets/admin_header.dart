@@ -5,7 +5,6 @@ import '../../../settings/presentation/screens/settings_page.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/themes/app_colors.dart';
-import '../../../../gen/assets.gen.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../notifications/presentation/widgets/notification_bell_button.dart';
 

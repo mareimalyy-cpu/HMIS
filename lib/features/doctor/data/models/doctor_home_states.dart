@@ -26,6 +26,10 @@ class DoctorHomeStates {
     return todayAppointments.where((a) => seen.add(a.patientId)).toList();
   }
 
+  List<AppointmentModel> get pendingAppointments => allAppointments
+      .where((a) => a.status == 'pending' || a.status == 'scheduled')
+      .toList();
+
   List<AppointmentModel> get recentCases {
     final sorted = List<AppointmentModel>.from(allAppointments)
       ..sort((a, b) => b.date.compareTo(a.date));

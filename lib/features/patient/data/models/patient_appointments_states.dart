@@ -15,7 +15,10 @@ class PatientAppointmentsStates {
   final String? errorMessage;
 
   List<AppointmentModel> get upcoming => appointments
-      .where((a) => a.status == 'scheduled' || a.status == 'pending')
+      .where((a) =>
+          a.status == 'scheduled' ||
+          a.status == 'pending' ||
+          a.status == 'approved')
       .toList();
 
   List<AppointmentModel> get past => appointments

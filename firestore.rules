@@ -3,7 +3,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── Helper functions ──────────────────────────────────────────────────────
+    // ── Helpers ───────────────────────────────────────────────────────────────
 
     function isSignedIn() {
       return request.auth != null;
@@ -13,201 +13,148 @@ service cloud.firestore {
       return request.auth.uid == uid;
     }
 
-    function getUserData() {
+    function userData() {
       let doc = get(/databases/$(database)/documents/users/$(request.auth.uid));
-      return doc != null ? doc.data : null;
+      return doc != null ? doc.data : {};
     }
 
-    function getRole() {
-      let data = getUserData();
-      return data != null ? data.get('role', '') : '';
+    function role() {
+      return isSignedIn() ? userData().get('role', '') : '';
     }
 
-    function isDoctor() {
-      return isSignedIn() && getRole() == 'doctor';
-    }
+    function isAdmin()         { return role() == 'admin'; }
+    function isReceptionist()  { return role() == 'receptionist'; }
+    function isDoctor()        { return role() == 'doctor'; }
+    function isPatient()       { return role() == 'patient'; }
 
-    function isPatient() {
-      return isSignedIn() && getRole() == 'patient';
-    }
-
-    function isAdmin() {
-      return isSignedIn() && getRole() == 'admin';
-    }
-
-    function isReceptionist() {
-      return isSignedIn() && getRole() == 'receptionist';
-    }
-
-    function isAdminOrReceptionist() {
-      return isAdmin() || isReceptionist();
-    }
+    function isStaff()         { return isAdmin() || isReceptionist(); }
 
     function isApprovedDoctor() {
-      let data = getUserData();
-      return isDoctor() && data != null && data.get('doctorStatus', '') == 'approved';
+      return isDoctor() && userData().get('doctorStatus', '') == 'approved';
     }
 
     // ── users/ ────────────────────────────────────────────────────────────────
-    // Stores ALL users (patients, doctors, admin, receptionist).
-    // Used for login, profile, and cross-role lookups.
 
     match /users/{userId} {
-      // Any authenticated user can read any user profile (needed for doctor listings, etc.)
-      allow read: if isSignedIn();
+      allow read:  if isSignedIn();
+      allow write: if isOwner(userId) || isStaff();
 
-      // A user can write their own document; admin/receptionist can write any
-      allow write: if isOwner(userId) || isAdminOrReceptionist();
-
-      // notifications sub-collection (patients receive slot cancellation alerts)
+      // Per-user notification sub-collection (slot cancellations, etc.)
       match /notifications/{notifId} {
-        allow read, write: if isOwner(userId) || isAdminOrReceptionist();
+        allow read, write: if isOwner(userId) || isStaff();
       }
 
-      // fcmTokens sub-collection — one doc per device, keyed by deviceId
+      // FCM device tokens — owner and admin only
       match /fcmTokens/{tokenId} {
         allow read, write: if isOwner(userId) || isAdmin();
       }
 
-      // medicalRecords sub-collection — stored under users/{patientId}/medicalRecords
+      // Medical records — patient can read their own; doctor/admin can read all
       match /medicalRecords/{recordId} {
-        allow read: if isSignedIn() && (
-          isOwner(userId) ||
-          isApprovedDoctor() ||
-          isAdminOrReceptionist()
-        );
+        allow read:          if isOwner(userId) || isApprovedDoctor() || isStaff();
         allow create, update: if isApprovedDoctor() || isAdmin();
-        allow delete: if isAdmin();
+        allow delete:         if isAdmin();
 
         match /prescriptions/{prescriptionId} {
-          allow read: if isSignedIn() && (
-            isOwner(userId) ||
-            isApprovedDoctor() ||
-            isAdminOrReceptionist()
-          );
+          allow read:  if isOwner(userId) || isApprovedDoctor() || isStaff();
           allow write: if isApprovedDoctor() || isAdmin();
         }
 
         match /labTests/{labTestId} {
-          allow read: if isSignedIn() && (
-            isOwner(userId) ||
-            isApprovedDoctor() ||
-            isAdminOrReceptionist()
-          );
+          allow read:  if isOwner(userId) || isApprovedDoctor() || isStaff();
           allow write: if isApprovedDoctor() || isAdmin();
         }
       }
     }
 
-    // ── doctors/ ─────────────────────────────────────────────────────────────
-    // Mirror of doctor user documents + time_slots sub-collection.
+    // ── doctors/ ──────────────────────────────────────────────────────────────
 
     match /doctors/{doctorId} {
-      // Anyone signed in can read doctor profiles (for patient booking flow)
-      allow read: if isSignedIn();
-
-      // Only the doctor themselves or admin can write their profile
+      allow read:  if isSignedIn();
       allow write: if isOwner(doctorId) || isAdmin();
 
-      // time_slots sub-collection
       match /timeSlots/{slotId} {
-        // Any signed-in user can read slots (patients need to see available slots)
-        allow read: if isSignedIn();
-
-        // Only the owning doctor can create or delete slots
+        allow read:          if isSignedIn();
         allow create, delete: if isOwner(doctorId) && isApprovedDoctor();
-
-        // Booking update (isBooked = true, appointmentId set) is allowed for any
-        // signed-in user — the transaction in code guarantees safety
-        allow update: if isSignedIn();
+        // Booking transactions flip isBooked — any authenticated user may update
+        allow update:         if isSignedIn();
       }
     }
 
     // ── patients/ ─────────────────────────────────────────────────────────────
-    // Mirror of patient user documents for role-specific queries.
 
     match /patients/{patientId} {
-      allow read: if isSignedIn();
-      allow write: if isOwner(patientId) || isAdminOrReceptionist();
+      allow read:  if isSignedIn();
+      allow write: if isOwner(patientId) || isStaff();
     }
 
     // ── appointments/ ─────────────────────────────────────────────────────────
 
     match /appointments/{appointmentId} {
-      // Single document read: full ownership + role check
+      // Single-doc read: only parties involved or staff
       allow get: if isSignedIn() && (
-        resource.data.patientId == request.auth.uid ||
+        resource.data.patientId   == request.auth.uid ||
         resource.data.patientUserId == request.auth.uid ||
-        resource.data.doctorId == request.auth.uid ||
-        isAdminOrReceptionist()
+        resource.data.doctorId    == request.auth.uid ||
+        isStaff()
       );
 
-      // List / query: any authenticated user may query appointments.
-      // Patients need to count a doctor's appointments on a date during booking.
-      // App code uses .count() so individual patient records are never sent to
-      // the client — only the aggregate number crosses the wire.
+      // List/count queries: signed-in only — needed for booking availability checks.
+      // Individual document data is never exposed via count() aggregations.
       allow list: if isSignedIn();
 
-      // Any signed-in user can create (patient books, receptionist books)
       allow create: if isSignedIn();
 
-      // Doctor, admin, or receptionist can update status
       allow update: if isSignedIn() && (
-        resource.data.doctorId == request.auth.uid ||
-        isAdminOrReceptionist()
+        resource.data.doctorId == request.auth.uid || isStaff()
       );
 
-      // Only admin or receptionist can delete
-      allow delete: if isAdminOrReceptionist();
+      allow delete: if isStaff();
     }
 
     // ── bills/ ────────────────────────────────────────────────────────────────
 
     match /bills/{billId} {
-      allow read: if isSignedIn() && (
-        resource.data.patientId == request.auth.uid ||
-        isAdminOrReceptionist()
+      // get: patient can read their own bill; staff can read any
+      allow get:  if isSignedIn() && (
+        resource.data.patientId == request.auth.uid || isStaff()
       );
-      allow write: if isAdminOrReceptionist();
+      // list: staff only — patients never query the full bills collection
+      allow list: if isStaff();
+      allow write: if isStaff();
     }
 
-    // ── specialties/ ─────────────────────────────────────────────────────────
+    // ── specialties/ ──────────────────────────────────────────────────────────
 
     match /specialties/{specialtyId} {
-      allow read: if isSignedIn();
+      allow read:  if isSignedIn();
       allow write: if isAdmin();
     }
 
-    // ── notifications/ ───────────────────────────────────────────────────────
-    // Global notification center. Each doc has a `userId` field identifying
-    // the recipient.
+    // ── notifications/ ────────────────────────────────────────────────────────
+    // Global notification center. Each document has a `userId` field.
     //
-    // NOTE: Firestore list rules cannot evaluate resource.data — split into
-    //       get (ownership check) + list (signed-in, query does the filtering).
+    // Firestore cannot evaluate resource.data in list rules, so:
+    //   get  → strict ownership check
+    //   list → signed-in only (client always queries .where('userId', == uid))
 
     match /notifications/{notifId} {
-      // Single-doc read: strict ownership
-      allow get: if isSignedIn() && (
+      allow get:    if isSignedIn() && (
         resource.data.userId == request.auth.uid || isAdmin()
       );
-      // Queries: allow any signed-in user — client always filters by userId.
-      // Individual document access is still gated by the get rule above.
-      allow list: if isSignedIn();
-      // Any signed-in user may create (server-side fanout for other users)
+      allow list:   if isSignedIn();
       allow create: if isSignedIn();
-      // Update / delete: only the owner or admin
       allow update, delete: if isSignedIn() && (
         resource.data.userId == request.auth.uid || isAdmin()
       );
     }
 
-    // ── notification_queue/ ──────────────────────────────────────────────────
-    // Queued broadcast jobs. Only admin/receptionist may enqueue; all
-    // authenticated users may read (needed for queue processing in app).
+    // ── notification_queue/ ───────────────────────────────────────────────────
+    // Broadcast jobs enqueued by staff and processed in-app.
 
     match /notification_queue/{jobId} {
-      allow read: if isSignedIn();
-      allow write: if isAdminOrReceptionist();
+      allow read:  if isSignedIn();
+      allow write: if isStaff();
     }
   }
 }

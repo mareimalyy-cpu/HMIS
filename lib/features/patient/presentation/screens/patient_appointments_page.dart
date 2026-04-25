@@ -22,18 +22,24 @@ class PatientAppointmentsPage extends ConsumerStatefulWidget {
 }
 
 class _PatientAppointmentsPageState
-    extends ConsumerState<PatientAppointmentsPage> {
-  bool _loaded = false;
+    extends ConsumerState<PatientAppointmentsPage>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadOnce());
+    _tabController = TabController(length: 2, vsync: this);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
   }
 
-  void _loadOnce() {
-    if (_loaded) return;
-    _loaded = true;
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  void _load() {
     final patientId = ref.read(authProvider).value?.currentUser?.id ?? '';
     if (patientId.isNotEmpty) {
       ref
@@ -75,9 +81,6 @@ class _PatientAppointmentsPageState
   @override
   Widget build(BuildContext context) {
     final asyncState = ref.watch(patientAppointmentsProvider);
-    final patientId =
-        ref.watch(authProvider).value?.currentUser?.id ?? '';
-
     ref.listen(patientAppointmentsProvider, (_, next) {
       final msg = next.value?.errorMessage;
       if (msg != null) GlassySnackbar.showError(context, msg);
@@ -98,31 +101,72 @@ class _PatientAppointmentsPageState
       body: asyncState.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text(LocaleKeys.error_e.tr())),
-        data: (state) => RefreshIndicator(
-          onRefresh: () => ref
-              .read(patientAppointmentsProvider.notifier)
-              .refresh(patientId),
-          child: state.upcoming.isEmpty
-              ? ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  children: [
-                    SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.6,
-                      child: _EmptyState(
-                          message: LocaleKeys.no_appointments_yet.tr()),
-                    ),
-                  ],
-                )
-              : ListView.builder(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(16),
-                  itemCount: state.upcoming.length,
-                  itemBuilder: (_, i) => _AppointmentCard(
-                    appt: state.upcoming[i],
-                    isLoading: state.isLoading,
-                    onCancel: () => _confirmCancel(state.upcoming[i]),
-                  ),
+        data: (state) => Column(
+          children: [
+            TabBar(
+              controller: _tabController,
+              labelColor: AppColors.teal,
+              unselectedLabelColor: Colors.grey,
+              indicatorColor: AppColors.teal,
+              tabs: [
+                Tab(
+                  text:
+                      '${LocaleKeys.upcoming.tr()} (${state.upcoming.length})',
                 ),
+                Tab(
+                  text:
+                      '${LocaleKeys.records.tr()} (${state.past.length})',
+                ),
+              ],
+            ),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  // ─── Upcoming ─────────────────────────────────
+                  RefreshIndicator(
+                    onRefresh: () => ref
+                        .read(patientAppointmentsProvider.notifier)
+                        .refresh(),
+                    child: state.upcoming.isEmpty
+                        ? _EmptyState(
+                            message: LocaleKeys.no_appointments_yet.tr())
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: state.upcoming.length,
+                            itemBuilder: (_, i) => _AppointmentCard(
+                              appt: state.upcoming[i],
+                              isLoading: state.isLoading,
+                              canCancel: true,
+                              onCancel: () =>
+                                  _confirmCancel(state.upcoming[i]),
+                            ),
+                          ),
+                  ),
+
+                  // ─── Past ─────────────────────────────────────
+                  RefreshIndicator(
+                    onRefresh: () => ref
+                        .read(patientAppointmentsProvider.notifier)
+                        .refresh(),
+                    child: state.past.isEmpty
+                        ? _EmptyState(
+                            message: LocaleKeys.no_records_yet.tr())
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: state.past.length,
+                            itemBuilder: (_, i) => _AppointmentCard(
+                              appt: state.past[i],
+                              isLoading: state.isLoading,
+                              canCancel: false,
+                              onCancel: () {},
+                            ),
+                          ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -154,13 +198,16 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _AppointmentCard extends StatelessWidget {
+
   const _AppointmentCard({
     required this.appt,
     required this.isLoading,
+    required this.canCancel,
     required this.onCancel,
   });
   final AppointmentModel appt;
   final bool isLoading;
+  final bool canCancel;
   final VoidCallback onCancel;
 
   Color _statusColor() => switch (appt.status) {
@@ -272,7 +319,7 @@ class _AppointmentCard extends StatelessWidget {
                     color: color,
                   ),
                 ],
-                if (appt.status != 'cancelled') ...[
+                if (canCancel && appt.status != 'cancelled') ...[
                   const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
@@ -293,6 +340,7 @@ class _AppointmentCard extends StatelessWidget {
 }
 
 class _Row extends StatelessWidget {
+
   const _Row({
     required this.icon,
     required this.label,

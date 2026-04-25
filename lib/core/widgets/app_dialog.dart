@@ -105,7 +105,7 @@ class AppDialog extends StatelessWidget {
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
-            if (contentWidget != null) contentWidget!,
+            ?contentWidget,
 
             if (actions.isNotEmpty) ...[
               const SizedBox(height: 24),

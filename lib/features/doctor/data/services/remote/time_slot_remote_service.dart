@@ -20,17 +20,16 @@ class TimeSlotRemoteService {
   // ── Queries ──────────────────────────────────────────────────────────────────
 
   Future<List<TimeSlotModel>> getSlotsForDoctor(String doctorId) async {
-    final snap =
-        await _slotsRef(doctorId).orderBy('startTime').get();
+    final snap = await _slotsRef(doctorId).orderBy('startTime').get();
     return snap.docs.map((d) => TimeSlotModel.fromJson(d.data())).toList();
   }
 
   Future<List<TimeSlotModel>> getAvailableSlotsForDoctor(
-      String doctorId) async {
-    final snap = await _slotsRef(doctorId)
-        .where('isBooked', isEqualTo: false)
-        .orderBy('startTime')
-        .get();
+    String doctorId,
+  ) async {
+    final snap = await _slotsRef(
+      doctorId,
+    ).where('isBooked', isEqualTo: false).orderBy('startTime').get();
     return snap.docs.map((d) => TimeSlotModel.fromJson(d.data())).toList();
   }
 
@@ -132,8 +131,9 @@ class TimeSlotRemoteService {
     required AppointmentModel appointment,
   }) async {
     final slotRef = _slotsRef(doctorId).doc(slotId);
-    final appointmentRef =
-        _db.collection(Constants.appointments.name).doc(appointment.id);
+    final appointmentRef = _db
+        .collection(Constants.appointments.name)
+        .doc(appointment.id);
 
     await _db.runTransaction((tx) async {
       final slotSnap = await tx.get(slotRef);
@@ -141,10 +141,7 @@ class TimeSlotRemoteService {
       final current = TimeSlotModel.fromJson(slotSnap.data()!);
       if (current.isBooked) throw Exception('هذا الموعد محجوز بالفعل');
 
-      tx.update(slotRef, {
-        'isBooked': true,
-        'appointmentId': appointment.id,
-      });
+      tx.update(slotRef, {'isBooked': true, 'appointmentId': appointment.id});
       tx.set(appointmentRef, appointment.toJson());
     });
   }

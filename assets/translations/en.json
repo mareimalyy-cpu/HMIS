@@ -256,5 +256,11 @@
   "i_verified": "I've Verified",
   "resend_email": "Resend Email",
   "email_resent": "Verification email sent",
-  "back_to_login": "Back to Login"
+  "back_to_login": "Back to Login",
+
+  "pending_appointments": "Pending Approval",
+  "mark_completed": "Completed",
+  "mark_no_show": "No Show",
+  "confirm_appt": "Confirm",
+  "reject_appt": "Reject"
 }
