@@ -37,8 +37,7 @@ class _ClinicsPageState extends ConsumerState<ClinicsPage> {
   Widget build(BuildContext context) {
     final asyncState = ref.watch(patientHomeProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final langCode =
-        EasyLocalization.of(context)?.locale.languageCode ?? 'ar';
+    final langCode = context.locale.languageCode;
 
     return Scaffold(
       appBar: SectionAppBar(

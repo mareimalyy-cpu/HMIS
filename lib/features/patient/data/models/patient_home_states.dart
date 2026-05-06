@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 import '../../../auth/data/models/user_model.dart';
 import 'specialty_model.dart';
 
@@ -36,8 +38,24 @@ class PatientHomeStates {
   }
 
   List<UserModel> doctorsBySpecialty(String specialtyId) {
+    final specialty = specialties.firstWhere(
+      (s) => s.id == specialtyId,
+      orElse: () => SpecialtyModel(
+        id: specialtyId,
+        nameEn: '',
+        nameAr: '',
+        imageUrl: '',
+        color: const Color(0xFF000000),
+      ),
+    );
+    final candidates = {
+      specialtyId.toLowerCase(),
+      specialty.nameEn.toLowerCase(),
+      specialty.nameAr.toLowerCase(),
+    }..remove('');
+
     return allDoctors
-        .where((d) => d.specialty == specialtyId)
+        .where((d) => candidates.contains(d.specialty?.toLowerCase() ?? ''))
         .toList();
   }
 

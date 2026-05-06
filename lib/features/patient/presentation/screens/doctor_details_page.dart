@@ -56,12 +56,7 @@ class DoctorDetailsPage extends StatelessWidget {
                             doctor.specialty ?? '',
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
-                          const SizedBox(width: 8),
-                          const Icon(Icons.star, color: Colors.amber, size: 18),
-                          Text(
-                            '${doctor.rating?.toInt() ?? 0}',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
+                        
                         ],
                       ),
                     ],

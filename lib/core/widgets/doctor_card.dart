@@ -19,7 +19,6 @@ class DoctorCard extends StatelessWidget {
     final cardColor = isDark
         ? colorScheme.surfaceContainerHighest
         : AppColors.cardBackground;
-    final ratingBgColor = isDark ? colorScheme.surface : AppColors.white;
     final accentColor = isDark ? AppColors.tealLight : AppColors.teal;
     final subtleColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
     final avatarBgColor = isDark ? Colors.grey[700]! : Colors.grey[300]!;
@@ -35,28 +34,7 @@ class DoctorCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Rating
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: ratingBgColor,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.star, color: Colors.amber, size: 16),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${doctor.rating?.toInt() ?? 0}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-            const Spacer(),
+            
             // Name & Specialty
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,

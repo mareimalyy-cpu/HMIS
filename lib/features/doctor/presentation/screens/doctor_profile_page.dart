@@ -198,14 +198,7 @@ class _ProfileHeader extends StatelessWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    const Icon(Icons.star_rounded,
-                        color: Colors.amber, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${user.rating?.toStringAsFixed(1) ?? '0.0'}',
-                      style: const TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.w600),
-                    ),
+                  
                     if (user.hospital?.isNotEmpty == true) ...[
                       const SizedBox(width: 12),
                       const Icon(Icons.local_hospital_rounded,

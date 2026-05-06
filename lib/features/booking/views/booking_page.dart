@@ -233,15 +233,7 @@ class _DoctorCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.star, color: Colors.amber, size: 16),
-              const SizedBox(width: 4),
-              Text('${doctor.rating?.toInt() ?? 0}'),
-            ],
-          ),
-          const Spacer(),
+        
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [

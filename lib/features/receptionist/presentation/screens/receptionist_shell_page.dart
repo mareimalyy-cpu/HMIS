@@ -27,7 +27,7 @@ class ReceptionistShellPage extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final labels = [
-      LocaleKeys.home.tr(),
+      '',
       LocaleKeys.appointments.tr(),
       LocaleKeys.manage_patients.tr(),
       LocaleKeys.manage_bills.tr(),

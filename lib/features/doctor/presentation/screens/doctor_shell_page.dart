@@ -45,13 +45,14 @@ class _DoctorShellPageState extends ConsumerState<DoctorShellPage> {
     ref.listen(authProvider, (_, next) {
       final state = next.value;
       if (state == null) return;
-      if (state.isPendingApproval || (!state.isAuthenticated && state.currentUser != null)) {
+      if (state.isPendingApproval ||
+          (!state.isAuthenticated && state.currentUser != null)) {
         context.go(PendingApprovalPage.routeName);
       }
     });
 
     final navItems = [
-      _NavItem(icon: Icons.home_filled, label: LocaleKeys.home.tr()),
+      const _NavItem(icon: Icons.home_filled, label: ''),
       _NavItem(icon: Icons.calendar_month, label: LocaleKeys.records.tr()),
       _NavItem(icon: Icons.person, label: LocaleKeys.my_account.tr()),
     ];
@@ -60,9 +61,7 @@ class _DoctorShellPageState extends ConsumerState<DoctorShellPage> {
       body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: isDark
-              ? Theme.of(context).colorScheme.surface
-              : Colors.white,
+          color: isDark ? Theme.of(context).colorScheme.surface : Colors.white,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.08),
