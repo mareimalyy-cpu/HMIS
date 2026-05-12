@@ -1,3 +1,71 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+// ───────────────────────────────────────────────────────────────────────────
+// Defensive JSON parsers — tolerate Firestore Timestamps, legacy types, and
+// manual edits in the Firebase console. Never throw on a type mismatch.
+// ───────────────────────────────────────────────────────────────────────────
+
+String _str(dynamic v, [String fallback = '']) {
+  if (v == null) return fallback;
+  if (v is String) return v;
+  if (v is Timestamp) {
+    final d = v.toDate();
+    return '${d.year.toString().padLeft(4, '0')}-'
+        '${d.month.toString().padLeft(2, '0')}-'
+        '${d.day.toString().padLeft(2, '0')}';
+  }
+  if (v is DateTime) {
+    return '${v.year.toString().padLeft(4, '0')}-'
+        '${v.month.toString().padLeft(2, '0')}-'
+        '${v.day.toString().padLeft(2, '0')}';
+  }
+  return v.toString();
+}
+
+String? _strOrNull(dynamic v) {
+  if (v == null) return null;
+  final s = _str(v);
+  return s.isEmpty ? null : s;
+}
+
+int? _intOrNull(dynamic v) {
+  if (v == null) return null;
+  if (v is int) return v;
+  if (v is num) return v.toInt();
+  if (v is String) return int.tryParse(v);
+  return null;
+}
+
+double? _doubleOrNull(dynamic v) {
+  if (v == null) return null;
+  if (v is double) return v;
+  if (v is num) return v.toDouble();
+  if (v is String) return double.tryParse(v);
+  return null;
+}
+
+bool _bool(dynamic v, [bool fallback = false]) {
+  if (v == null) return fallback;
+  if (v is bool) return v;
+  if (v is String) return v.toLowerCase() == 'true';
+  if (v is num) return v != 0;
+  return fallback;
+}
+
+List<String>? _strListOrNull(dynamic v) {
+  if (v == null) return null;
+  if (v is List) return v.map(_str).where((s) => s.isNotEmpty).toList();
+  return null;
+}
+
+String? _readTimestampString(dynamic v) {
+  if (v == null) return null;
+  if (v is String) return v;
+  if (v is Timestamp) return v.toDate().toIso8601String();
+  if (v is DateTime) return v.toIso8601String();
+  return v.toString();
+}
+
 enum UserRole {
   doctor,
   patient,
@@ -55,30 +123,28 @@ class UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id'] as String? ?? '',
-      name: json['name'] as String? ?? '',
-      email: json['email'] as String? ?? '',
-      phone: json['phone'] as String? ?? '',
-      city: json['city'] as String? ?? '',
-      imageUrl: json['imageUrl'] as String?,
-      role: UserRole.fromString(json['role'] as String? ?? 'patient'),
-      isActive: json['isActive'] as bool? ?? true,
-      age: json['age'] as int?,
-      specialty: json['specialty'] as String?,
-      hospital: json['hospital'] as String?,
-      hospitalAddress: json['hospitalAddress'] as String?,
-      bio: json['bio'] as String?,
-      rating: (json['rating'] as num?)?.toDouble(),
-      workDays: (json['workDays'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList(),
-      workHoursStart: json['workHoursStart'] as String?,
-      workHoursEnd: json['workHoursEnd'] as String?,
+      id: _str(json['id']),
+      name: _str(json['name']),
+      email: _str(json['email']),
+      phone: _str(json['phone']),
+      city: _str(json['city']),
+      imageUrl: _strOrNull(json['imageUrl']),
+      role: UserRole.fromString(_str(json['role'], 'patient')),
+      isActive: _bool(json['isActive'], true),
+      age: _intOrNull(json['age']),
+      specialty: _strOrNull(json['specialty']),
+      hospital: _strOrNull(json['hospital']),
+      hospitalAddress: _strOrNull(json['hospitalAddress']),
+      bio: _strOrNull(json['bio']),
+      rating: _doubleOrNull(json['rating']),
+      workDays: _strListOrNull(json['workDays']),
+      workHoursStart: _strOrNull(json['workHoursStart']),
+      workHoursEnd: _strOrNull(json['workHoursEnd']),
       doctorStatus: json['doctorStatus'] != null
-          ? DoctorStatus.fromString(json['doctorStatus'] as String)
+          ? DoctorStatus.fromString(_str(json['doctorStatus']))
           : null,
-      approvedBy: json['approvedBy'] as String?,
-      approvedAt: json['approvedAt'] as String?,
+      approvedBy: _strOrNull(json['approvedBy']),
+      approvedAt: _readTimestampString(json['approvedAt']),
     );
   }
 

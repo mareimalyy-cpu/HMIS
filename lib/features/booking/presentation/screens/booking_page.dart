@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/services/helper.dart';
+import '../../../../core/widgets/doctor_card.dart';
 import '../../../../generated/locale_keys.g.dart';
 
 import '../../../../core/themes/app_colors.dart';
@@ -19,7 +20,6 @@ import '../providers/booking_provider.dart';
 import 'booking_success_page.dart';
 
 class BookingPage extends ConsumerStatefulWidget {
-
   const BookingPage({required this.doctor, super.key});
   static const routeName = '/booking';
 
@@ -36,9 +36,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref
-          .read(bookingProvider.notifier)
-          .loadAvailableSlots(widget.doctor.id);
+      ref.read(bookingProvider.notifier).loadAvailableSlots(widget.doctor.id);
     });
   }
 
@@ -96,7 +94,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               // ── Doctor mini card ──────────────────────────────────────────
-              _DoctorCard(doctor: widget.doctor, cardColor: cardColor),
+              DoctorCard(doctor: widget.doctor),
 
               const SizedBox(height: 20),
 
@@ -112,26 +110,36 @@ class _BookingPageState extends ConsumerState<BookingPage> {
               const SizedBox(height: 12),
 
               // ── Patient name ──────────────────────────────────────────────
-              Text(LocaleKeys.patient_name.tr(),
-                  style: Theme.of(context).textTheme.bodyMedium),
+              Text(
+                LocaleKeys.patient_name.tr(),
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
               const SizedBox(height: 4),
               _ReadOnlyField(
-                  text: currentUser?.name ?? '', cardColor: cardColor),
+                text: currentUser?.name ?? '',
+                cardColor: cardColor,
+              ),
 
               const SizedBox(height: 12),
 
               // ── Phone ─────────────────────────────────────────────────────
-              Text(LocaleKeys.phone.tr(),
-                  style: Theme.of(context).textTheme.bodyMedium),
+              Text(
+                LocaleKeys.phone.tr(),
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
               const SizedBox(height: 4),
               _ReadOnlyField(
-                  text: currentUser?.phone ?? '', cardColor: cardColor),
+                text: currentUser?.phone ?? '',
+                cardColor: cardColor,
+              ),
 
               const SizedBox(height: 12),
 
               // ── Symptoms ──────────────────────────────────────────────────
-              Text(LocaleKeys.symptoms.tr(),
-                  style: Theme.of(context).textTheme.bodyMedium),
+              Text(
+                LocaleKeys.symptoms.tr(),
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
               const SizedBox(height: 4),
               MyTextField(
                 controller: _symptomsController,
@@ -165,8 +173,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                 attachments: attachments,
                 cardColor: cardColor,
                 isDisabled: isLoading,
-                onAddTapped: () =>
-                    _onPickFiles(currentUser?.id ?? ''),
+                onAddTapped: () => _onPickFiles(currentUser?.id ?? ''),
                 onRemove: (name) =>
                     ref.read(bookingProvider.notifier).removeAttachment(name),
               ),
@@ -189,7 +196,9 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                           return;
                         }
                         if (currentUser == null) return;
-                        ref.read(bookingProvider.notifier).submitBooking(
+                        ref
+                            .read(bookingProvider.notifier)
+                            .submitBooking(
                               patient: currentUser,
                               doctor: widget.doctor,
                               slot: selectedSlot,
@@ -207,65 +216,9 @@ class _BookingPageState extends ConsumerState<BookingPage> {
   }
 }
 
-// ─── Doctor mini card ─────────────────────────────────────────────────────────
-
-class _DoctorCard extends StatelessWidget {
-
-  const _DoctorCard({required this.doctor, required this.cardColor});
-  final UserModel doctor;
-  final Color cardColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-        
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                doctor.name,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              Text(
-                doctor.specialty ?? '',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: Colors.grey[600]),
-              ),
-            ],
-          ),
-          const SizedBox(width: 10),
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: Colors.grey[300],
-            backgroundImage: doctor.imageUrl != null
-                ? NetworkImage(doctor.imageUrl!)
-                : null,
-            child: doctor.imageUrl == null
-                ? const Icon(Icons.person, size: 24, color: Colors.white)
-                : null,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 // ─── Read-only field ──────────────────────────────────────────────────────────
 
 class _ReadOnlyField extends StatelessWidget {
-
   const _ReadOnlyField({required this.text, required this.cardColor});
   final String text;
   final Color cardColor;
@@ -287,7 +240,6 @@ class _ReadOnlyField extends StatelessWidget {
 // ─── Slots section ────────────────────────────────────────────────────────────
 
 class _SlotsSection extends StatelessWidget {
-
   const _SlotsSection({
     required this.isSlotsLoading,
     required this.slotsError,
@@ -337,10 +289,7 @@ class _SlotsSection extends StatelessWidget {
         if (isSlotsLoading)
           _SlotsShimmer(cardColor: cardColor)
         else if (slotsError != null)
-          _ErrorRetry(
-            cardColor: cardColor,
-            onRetry: onRetry,
-          )
+          _ErrorRetry(cardColor: cardColor, onRetry: onRetry)
         else if (slotsByDate.isEmpty)
           _EmptySlots(cardColor: cardColor)
         else
@@ -442,10 +391,9 @@ class _EmptySlots extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             LocaleKeys.no_available_slots.tr(),
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: Colors.grey),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
           ),
         ],
       ),
@@ -456,7 +404,6 @@ class _EmptySlots extends StatelessWidget {
 // ── Slots grouped by date ─────────────────────────────────────────────────────
 
 class _DateGroup extends StatelessWidget {
-
   const _DateGroup({
     required this.dateKey,
     required this.slots,
@@ -525,7 +472,6 @@ class _DateGroup extends StatelessWidget {
 // ─── Attachments section ──────────────────────────────────────────────────────
 
 class _AttachmentsSection extends StatelessWidget {
-
   const _AttachmentsSection({
     required this.attachments,
     required this.cardColor,
@@ -552,12 +498,16 @@ class _AttachmentsSection extends StatelessWidget {
               TextButton.icon(
                 onPressed: onAddTapped,
                 icon: const Icon(Icons.attach_file_rounded, size: 18),
-                label: Text(LocaleKeys.add_attachment.tr(),
-                    style: const TextStyle(fontSize: 13)),
+                label: Text(
+                  LocaleKeys.add_attachment.tr(),
+                  style: const TextStyle(fontSize: 13),
+                ),
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.teal,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                 ),
               ),
             const Spacer(),
@@ -568,7 +518,9 @@ class _AttachmentsSection extends StatelessWidget {
                   Container(
                     margin: const EdgeInsets.only(left: 6),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 7, vertical: 2),
+                      horizontal: 7,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.teal,
                       borderRadius: BorderRadius.circular(10),
@@ -576,13 +528,16 @@ class _AttachmentsSection extends StatelessWidget {
                     child: Text(
                       '${attachments.length}/3',
                       style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold),
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                Text(LocaleKeys.attachments.tr(),
-                    style: Theme.of(context).textTheme.bodyMedium),
+                Text(
+                  LocaleKeys.attachments.tr(),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
               ],
             ),
           ],
@@ -592,7 +547,9 @@ class _AttachmentsSection extends StatelessWidget {
           child: Text(
             LocaleKeys.allowed_file_types.tr(),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[500], fontSize: 11),
+              color: Colors.grey[500],
+              fontSize: 11,
+            ),
           ),
         ),
         if (attachments.isNotEmpty) const SizedBox(height: 8),
@@ -611,7 +568,6 @@ class _AttachmentsSection extends StatelessWidget {
 // ─── File tile ────────────────────────────────────────────────────────────────
 
 class _FileTile extends StatelessWidget {
-
   const _FileTile({
     required this.attachment,
     required this.cardColor,
@@ -643,12 +599,14 @@ class _FileTile extends StatelessWidget {
             )
           else
             IconButton(
-              icon: Icon(Icons.close_rounded, size: 18,
-                  color: onRemove == null ? Colors.grey : AppColors.danger),
+              icon: Icon(
+                Icons.close_rounded,
+                size: 18,
+                color: onRemove == null ? Colors.grey : AppColors.danger,
+              ),
               onPressed: onRemove,
               padding: EdgeInsets.zero,
-              constraints:
-                  const BoxConstraints(minWidth: 28, minHeight: 28),
+              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
               tooltip: LocaleKeys.remove_file.tr(),
             ),
           const SizedBox(width: 8),
@@ -658,8 +616,9 @@ class _FileTile extends StatelessWidget {
               children: [
                 Text(
                   attachment.name,
-                  style: Theme.of(context).textTheme.bodySmall
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                   textAlign: TextAlign.right,
@@ -669,16 +628,16 @@ class _FileTile extends StatelessWidget {
                   attachment.isUploading
                       ? LocaleKeys.uploading.tr()
                       : attachment.uploadError != null
-                          ? LocaleKeys.upload_failed.tr()
-                          : attachment.displaySize,
+                      ? LocaleKeys.upload_failed.tr()
+                      : attachment.displaySize,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontSize: 11,
-                        color: attachment.uploadError != null
-                            ? AppColors.danger
-                            : attachment.isUploading
-                                ? AppColors.teal
-                                : Colors.grey[500],
-                      ),
+                    fontSize: 11,
+                    color: attachment.uploadError != null
+                        ? AppColors.danger
+                        : attachment.isUploading
+                        ? AppColors.teal
+                        : Colors.grey[500],
+                  ),
                   textAlign: TextAlign.right,
                 ),
               ],
@@ -708,33 +667,50 @@ class _FileIcon extends StatelessWidget {
           width: 40,
           height: 40,
           fit: BoxFit.cover,
-          errorBuilder: (_, _, _) =>
-              _iconBox(Icons.image_rounded, Colors.teal.shade100, AppColors.teal),
+          errorBuilder: (_, _, _) => _iconBox(
+            Icons.image_rounded,
+            Colors.teal.shade100,
+            AppColors.teal,
+          ),
         ),
       );
     }
     if (attachment.isPdf) {
-      return _iconBox(Icons.picture_as_pdf_rounded,
-          Colors.red.shade50, Colors.red.shade400);
+      return _iconBox(
+        Icons.picture_as_pdf_rounded,
+        Colors.red.shade50,
+        Colors.red.shade400,
+      );
     }
     if (attachment.isExcel) {
-      return _iconBox(Icons.table_chart_rounded,
-          Colors.green.shade50, Colors.green.shade600);
+      return _iconBox(
+        Icons.table_chart_rounded,
+        Colors.green.shade50,
+        Colors.green.shade600,
+      );
     }
     if (attachment.isWord) {
-      return _iconBox(Icons.description_rounded,
-          Colors.blue.shade50, Colors.blue.shade600);
+      return _iconBox(
+        Icons.description_rounded,
+        Colors.blue.shade50,
+        Colors.blue.shade600,
+      );
     }
     return _iconBox(
-        Icons.insert_drive_file_rounded, Colors.grey.shade100, Colors.grey);
+      Icons.insert_drive_file_rounded,
+      Colors.grey.shade100,
+      Colors.grey,
+    );
   }
 
   Widget _iconBox(IconData icon, Color bg, Color fg) {
     return Container(
       width: 40,
       height: 40,
-      decoration:
-          BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: Icon(icon, color: fg, size: 22),
     );
   }

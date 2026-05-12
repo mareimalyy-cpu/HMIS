@@ -26,17 +26,17 @@ Future<void> firstInit() async {
   try {
     await LocalStorage.instance.init();
   } catch (e) {
-    log('error_when_init_localstorage_e'.tr());
+    log('Local storage init error: $e');
   }
   try {
     if (Firebase.apps.isEmpty) {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
-      debugPrint('firebase_initialized_successfully'.tr());
+      log('Firebase initialized successfully');
     }
   } catch (e) {
-    debugPrint('firebase_initialization_etostring'.tr());
+    log('Firebase init error: $e');
   }
   try {
     await GoogleSignIn.instance.initialize(
@@ -59,7 +59,7 @@ Future<void> firstInit() async {
   try {
     await NotificationInitializer.instance.init();
   } catch (e) {
-    log('error_when_init_localnotificationsservice_e'.tr());
+    log('Notification init error: $e');
   }
 }
 
@@ -82,8 +82,8 @@ void main() {
       );
     },
     (error, stackTrace) {
-      log('error_error'.tr());
-      log('stack_trace_stacktrace'.tr());
+      log('Unhandled error: $error');
+      log('Stack trace: $stackTrace');
     },
   );
 }

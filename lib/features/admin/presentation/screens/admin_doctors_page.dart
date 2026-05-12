@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/services/helper.dart';
 import '../../../../generated/locale_keys.g.dart';
 
@@ -123,7 +124,7 @@ class _AdminDoctorsPageState extends ConsumerState<AdminDoctorsPage>
           label: LocaleKeys.reject.tr(),
           type: AppButtonType.danger,
           onPressed: () {
-            Navigator.pop(context);
+            context.pop();
             ref.read(adminProvider.notifier).rejectDoctor(doctor.id, adminId);
           },
         ),
@@ -140,35 +141,136 @@ class _AdminDoctorsPageState extends ConsumerState<AdminDoctorsPage>
       if (msg != null) GlassySnackbar.showError(context, msg);
     });
 
-    return asyncState.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) =>
-          Center(child: Text('${LocaleKeys.error_e.tr()}: $e')),
-      data: (state) {
-        const adminId = ''; // admin self-id not exposed here; provider handles it
+    const adminId = ''; // admin self-id not exposed here; provider handles it
+    final state = asyncState.value;
+    final hasData = state != null;
 
-        final filteredApproved = _query.isEmpty
+    bool matchesQuery(UserModel d) =>
+        d.name.contains(_query) ||
+        (d.specialty ?? '').contains(_query) ||
+        d.phone.contains(_query);
+
+    final filteredApproved = !hasData
+        ? const <UserModel>[]
+        : _query.isEmpty
             ? state.doctors
-            : state.doctors
-                .where((d) =>
-                    d.name.contains(_query) ||
-                    (d.specialty ?? '').contains(_query) ||
-                    d.phone.contains(_query))
-                .toList();
+            : state.doctors.where(matchesQuery).toList();
 
-        final filteredPending = _query.isEmpty
+    final filteredPending = !hasData
+        ? const <UserModel>[]
+        : _query.isEmpty
             ? state.pendingDoctors
-            : state.pendingDoctors
-                .where((d) =>
-                    d.name.contains(_query) ||
-                    (d.specialty ?? '').contains(_query) ||
-                    d.phone.contains(_query))
-                .toList();
+            : state.pendingDoctors.where(matchesQuery).toList();
 
-        return Column(
+    final pendingCount = state?.pendingDoctors.length ?? 0;
+    final isLoading = state?.isLoading ?? false;
+
+    final tabBar = TabBar(
+      controller: _tabController,
+      labelColor: AppColors.teal,
+      unselectedLabelColor: Colors.grey,
+      indicatorColor: AppColors.teal,
+      tabs: [
+        Tab(text: LocaleKeys.approved_doctors.tr()),
+        Tab(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(LocaleKeys.pending_doctors.tr()),
+              if (pendingCount > 0) ...[
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.orange,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '$pendingCount',
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+
+    Widget bodyForState() {
+      // Loading: show spinner inside a scrollable so refresh works
+      if (asyncState.isLoading && !hasData) {
+        return ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: const [
+            SizedBox(height: 120),
+            Center(child: CircularProgressIndicator()),
+          ],
+        );
+      }
+      // Error: show error inside a scrollable so refresh works
+      if (asyncState.hasError && !hasData) {
+        return ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
           children: [
-            const AdminHeader(),
-            Padding(
+            const SizedBox(height: 120),
+            Center(
+              child: Text('${LocaleKeys.error_e.tr()}: ${asyncState.error}'),
+            ),
+          ],
+        );
+      }
+      // Data (or stale data while refreshing): show the tabs
+      return TabBarView(
+        controller: _tabController,
+        children: [
+          _TabContent(
+            isEmpty: filteredApproved.isEmpty,
+            emptyText: LocaleKeys.no_doctors_found.tr(),
+            child: ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              itemCount: filteredApproved.length,
+              itemBuilder: (_, i) => _DoctorCard(
+                doctor: filteredApproved[i],
+                isLoading: isLoading,
+                onDelete: () => _confirmDelete(filteredApproved[i]),
+                onEdit: () => _showEditSheet(filteredApproved[i]),
+              ),
+            ),
+          ),
+          _TabContent(
+            isEmpty: filteredPending.isEmpty,
+            emptyText: LocaleKeys.no_doctors_found.tr(),
+            child: ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              itemCount: filteredPending.length,
+              itemBuilder: (_, i) => _PendingDoctorCard(
+                doctor: filteredPending[i],
+                isLoading: isLoading,
+                onApprove: () =>
+                    _confirmApprove(filteredPending[i], adminId),
+                onReject: () => _confirmReject(filteredPending[i], adminId),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => ref.read(adminProvider.notifier).refresh(),
+      color: AppColors.teal,
+      child: NestedScrollView(
+        headerSliverBuilder: (_, _) => [
+          const SliverToBoxAdapter(child: AdminHeader()),
+          SliverToBoxAdapter(
+            child: Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: SearchField(
@@ -177,120 +279,67 @@ class _AdminDoctorsPageState extends ConsumerState<AdminDoctorsPage>
                 onChanged: (v) => setState(() => _query = v),
               ),
             ),
-            TabBar(
-              controller: _tabController,
-              labelColor: AppColors.teal,
-              unselectedLabelColor: Colors.grey,
-              indicatorColor: AppColors.teal,
-              tabs: [
-                Tab(text: LocaleKeys.approved_doctors.tr()),
-                Tab(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(LocaleKeys.pending_doctors.tr()),
-                      if (state.pendingDoctors.isNotEmpty) ...[
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.orange,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            state.pendingDoctors.length.toString(),
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  // ─── Approved doctors ─────────────────────────
-                  RefreshIndicator(
-                    onRefresh: () => ref.read(adminProvider.notifier).refresh(),
-                    color: AppColors.teal,
-                    child: filteredApproved.isEmpty
-                        ? CustomScrollView(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            slivers: [
-                              SliverFillRemaining(
-                                child: Center(
-                                  child: Text(
-                                    LocaleKeys.no_doctors_found.tr(),
-                                    style:
-                                        const TextStyle(color: Colors.grey),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          )
-                        : ListView.builder(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            padding: const EdgeInsets.all(16),
-                            itemCount: filteredApproved.length,
-                            itemBuilder: (_, i) => _DoctorCard(
-                              doctor: filteredApproved[i],
-                              isLoading: state.isLoading,
-                              onDelete: () =>
-                                  _confirmDelete(filteredApproved[i]),
-                              onEdit: () =>
-                                  _showEditSheet(filteredApproved[i]),
-                            ),
-                          ),
-                  ),
-
-                  // ─── Pending doctors ──────────────────────────
-                  RefreshIndicator(
-                    onRefresh: () => ref.read(adminProvider.notifier).refresh(),
-                    color: AppColors.teal,
-                    child: filteredPending.isEmpty
-                        ? CustomScrollView(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            slivers: [
-                              SliverFillRemaining(
-                                child: Center(
-                                  child: Text(
-                                    LocaleKeys.no_doctors_found.tr(),
-                                    style:
-                                        const TextStyle(color: Colors.grey),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          )
-                        : ListView.builder(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            padding: const EdgeInsets.all(16),
-                            itemCount: filteredPending.length,
-                            itemBuilder: (_, i) => _PendingDoctorCard(
-                              doctor: filteredPending[i],
-                              isLoading: state.isLoading,
-                              onApprove: () => _confirmApprove(
-                                  filteredPending[i], adminId),
-                              onReject: () =>
-                                  _confirmReject(filteredPending[i], adminId),
-                            ),
-                          ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
+          ),
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _TabBarDelegate(tabBar),
+          ),
+        ],
+        body: bodyForState(),
+      ),
     );
   }
+}
+
+class _TabContent extends StatelessWidget {
+  const _TabContent({
+    required this.isEmpty,
+    required this.emptyText,
+    required this.child,
+  });
+
+  final bool isEmpty;
+  final String emptyText;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isEmpty) return child;
+    return CustomScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      slivers: [
+        SliverFillRemaining(
+          child: Center(
+            child: Text(emptyText,
+                style: const TextStyle(color: Colors.grey)),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TabBarDelegate extends SliverPersistentHeaderDelegate {
+  _TabBarDelegate(this.tabBar);
+  final TabBar tabBar;
+
+  @override
+  double get minExtent => tabBar.preferredSize.height;
+
+  @override
+  double get maxExtent => tabBar.preferredSize.height;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return ColoredBox(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: tabBar,
+    );
+  }
+
+  @override
+  bool shouldRebuild(_TabBarDelegate oldDelegate) =>
+      oldDelegate.tabBar != tabBar;
 }
 
 // ─── Approved doctor card ──────────────────────────────────────────────────

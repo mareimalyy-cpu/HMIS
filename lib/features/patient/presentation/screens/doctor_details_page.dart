@@ -10,7 +10,6 @@ import '../../../auth/data/models/user_model.dart';
 import '../../../booking/presentation/screens/booking_page.dart';
 
 class DoctorDetailsPage extends StatelessWidget {
-
   const DoctorDetailsPage({required this.doctor, super.key});
   static const routeName = '/doctor-details';
 
@@ -56,7 +55,6 @@ class DoctorDetailsPage extends StatelessWidget {
                             doctor.specialty ?? '',
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
-                        
                         ],
                       ),
                     ],
@@ -81,17 +79,21 @@ class DoctorDetailsPage extends StatelessWidget {
             // Bio Section
             Text(
               LocaleKeys.about.tr(),
+
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 color: accentColor,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
-            Text(
-              doctor.bio ?? LocaleKeys.no_bio_available.tr(),
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: subtleColor),
+            Center(
+              child: Text(
+                doctor.bio ?? LocaleKeys.no_bio_available.tr(),
+                textAlign: TextAlign.center,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: subtleColor),
+              ),
             ),
 
             const SizedBox(height: 20),

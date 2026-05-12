@@ -21,27 +21,59 @@ class Admin extends _$Admin {
   Future<AdminStates> build() async {
     _remoteService = AdminRemoteService();
     _notifService = NotificationFirestoreService();
-    return _fetchAll();
+    try {
+      return await _fetchAll();
+    } catch (e, st) {
+      log('🛑 Admin build error: $e', error: e, stackTrace: st);
+      rethrow;
+    }
   }
 
   Future<AdminStates> _fetchAll() async {
-    final results = await Future.wait([
-      _remoteService.getAllDoctors(),
-      _remoteService.getPendingDoctors(),
-      _remoteService.getAllPatients(),
-      _remoteService.getAllAppointments(),
-    ]);
-    return AdminStates(
-      doctors: results[0] as List<UserModel>,
-      pendingDoctors: results[1] as List<UserModel>,
-      patients: results[2] as List<UserModel>,
-      appointments: results[3] as List<AppointmentModel>,
-    );
+    try {
+      final results = await Future.wait([
+        _remoteService.getAllDoctors().catchError((e, st) {
+          log('🛑 getAllDoctors error: $e', error: e, stackTrace: st);
+          throw e;
+        }),
+        _remoteService.getPendingDoctors().catchError((e, st) {
+          log('🛑 getPendingDoctors error: $e', error: e, stackTrace: st);
+          throw e;
+        }),
+        _remoteService.getAllPatients().catchError((e, st) {
+          log('🛑 getAllPatients error: $e', error: e, stackTrace: st);
+          throw e;
+        }),
+        _remoteService.getAllAppointments().catchError((e, st) {
+          log('🛑 getAllAppointments error: $e', error: e, stackTrace: st);
+          throw e;
+        }),
+      ]);
+      log('✅ Admin _fetchAll loaded: '
+          '${(results[0] as List).length} doctors, '
+          '${(results[1] as List).length} pending, '
+          '${(results[2] as List).length} patients, '
+          '${(results[3] as List).length} appointments');
+      return AdminStates(
+        doctors: results[0] as List<UserModel>,
+        pendingDoctors: results[1] as List<UserModel>,
+        patients: results[2] as List<UserModel>,
+        appointments: results[3] as List<AppointmentModel>,
+      );
+    } catch (e, st) {
+      log('🛑 Admin _fetchAll error: $e', error: e, stackTrace: st);
+      rethrow;
+    }
   }
 
   Future<void> refresh() async {
+    log('🔄 Admin refresh triggered');
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(_fetchAll);
+    if (state.hasError) {
+      log('🛑 Admin refresh failed: ${state.error}',
+          error: state.error, stackTrace: state.stackTrace);
+    }
   }
 
   Future<void> approveDoctor(String doctorId, String adminId) async {
@@ -69,8 +101,9 @@ class Admin extends _$Admin {
         doctors: [...state.value!.doctors, updatedApproved],
         isLoading: false,
       ));
-    } catch (e) {
-      log('Approve doctor error: $e');
+    } catch (e, st) {
+      log('🛑 Approve doctor error (id=$doctorId): $e',
+          error: e, stackTrace: st);
       state = AsyncData(state.value!.copyWith(
         isLoading: false,
         errorMessage: 'فشل الموافقة على الطبيب',
@@ -95,8 +128,9 @@ class Admin extends _$Admin {
             .toList(),
         isLoading: false,
       ));
-    } catch (e) {
-      log('Reject doctor error: $e');
+    } catch (e, st) {
+      log('🛑 Reject doctor error (id=$doctorId): $e',
+          error: e, stackTrace: st);
       state = AsyncData(state.value!.copyWith(
         isLoading: false,
         errorMessage: 'فشل رفض الطبيب',
@@ -114,8 +148,9 @@ class Admin extends _$Admin {
       state = AsyncData(
         state.value!.copyWith(appointments: updated, isLoading: false),
       );
-    } catch (e) {
-      log('Delete appointment error: $e');
+    } catch (e, st) {
+      log('🛑 Delete appointment error (id=$appointmentId): $e',
+          error: e, stackTrace: st);
       state = AsyncData(
         state.value!.copyWith(isLoading: false, errorMessage: 'فشل حذف الحجز'),
       );
@@ -132,8 +167,9 @@ class Admin extends _$Admin {
       state = AsyncData(
         state.value!.copyWith(doctors: updated, isLoading: false),
       );
-    } catch (e) {
-      log('Delete doctor error: $e');
+    } catch (e, st) {
+      log('🛑 Delete doctor error (id=$doctorId): $e',
+          error: e, stackTrace: st);
       state = AsyncData(
         state.value!.copyWith(isLoading: false, errorMessage: 'فشل حذف الطبيب'),
       );
@@ -150,8 +186,9 @@ class Admin extends _$Admin {
       state = AsyncData(
         state.value!.copyWith(doctors: updated, isLoading: false),
       );
-    } catch (e) {
-      log('Update doctor error: $e');
+    } catch (e, st) {
+      log('🛑 Update doctor error (id=${doctor.id}): $e',
+          error: e, stackTrace: st);
       state = AsyncData(
         state.value!.copyWith(
           isLoading: false,

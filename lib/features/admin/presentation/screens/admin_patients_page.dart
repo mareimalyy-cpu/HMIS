@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,67 +40,104 @@ class _AdminPatientsPageState extends ConsumerState<AdminPatientsPage> {
       if (msg != null) GlassySnackbar.showError(context, msg);
     });
 
-    return asyncState.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('${LocaleKeys.error_e.tr()}: $e')),
-      data: (state) {
-        final filtered = _query.isEmpty
+    final state = asyncState.value;
+    final hasData = state != null;
+
+    final filtered = !hasData
+        ? const <UserModel>[]
+        : _query.isEmpty
             ? state.patients
             : state.patients
-                  .where(
-                    (p) =>
-                        p.name.contains(_query) ||
-                        p.phone.contains(_query) ||
-                        p.id.contains(_query),
-                  )
-                  .toList();
+                .where(
+                  (p) =>
+                      p.name.contains(_query) ||
+                      p.phone.contains(_query) ||
+                      p.id.contains(_query),
+                )
+                .toList();
 
-        return RefreshIndicator(
-          onRefresh: () => ref.read(adminProvider.notifier).refresh(),
-          child: CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: Column(
-                  children: [
-                    const AdminHeader(),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      child: SearchField(
-                        controller: _searchController,
-                        hintText: LocaleKeys.search_patient_hint.tr(),
-                        onChanged: (v) => setState(() => _query = v),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) => _PatientCard(patient: filtered[index]),
-                    childCount: filtered.length,
-                  ),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: _TotalCard(
-                    label: LocaleKeys.total_patients.tr(),
-                    count: state.patientCount,
-                    icon: Icons.people_alt_rounded,
-                  ),
-                ),
-              ),
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
-            ],
+    Widget statusSliver() {
+      if (asyncState.isLoading && !hasData) {
+        return const SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(child: CircularProgressIndicator()),
+        );
+      }
+      if (asyncState.hasError && !hasData) {
+        log('🛑 AdminPatientsPage error: ${asyncState.error}',
+            error: asyncState.error, stackTrace: asyncState.stackTrace);
+        return SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(
+            child: Text(
+              '${LocaleKeys.error_e.tr()}: ${asyncState.error}',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.grey),
+            ),
           ),
         );
-      },
+      }
+      if (filtered.isEmpty) {
+        return SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(
+            child: Text(
+              LocaleKeys.no_results_found.tr(),
+              style: const TextStyle(color: Colors.grey),
+            ),
+          ),
+        );
+      }
+      return SliverPadding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) => _PatientCard(patient: filtered[index]),
+            childCount: filtered.length,
+          ),
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => ref.read(adminProvider.notifier).refresh(),
+      color: AppColors.teal,
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          SliverToBoxAdapter(
+            child: Column(
+              children: [
+                const AdminHeader(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: SearchField(
+                    controller: _searchController,
+                    hintText: LocaleKeys.search_patient_hint.tr(),
+                    onChanged: (v) => setState(() => _query = v),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          statusSliver(),
+          if (hasData && filtered.isNotEmpty)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: _TotalCard(
+                  label: LocaleKeys.total_patients.tr(),
+                  count: state.patientCount,
+                  icon: Icons.people_alt_rounded,
+                ),
+              ),
+            ),
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+        ],
+      ),
     );
   }
 }

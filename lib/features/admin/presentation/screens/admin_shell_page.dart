@@ -9,7 +9,6 @@ import 'admin_doctors_page.dart';
 import 'admin_patients_page.dart';
 
 class AdminShellPage extends StatelessWidget {
-
   const AdminShellPage({super.key});
   static const routeName = '/admin-home';
 
@@ -58,7 +57,7 @@ class AdminShellPage extends StatelessWidget {
               ],
             ),
             padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).padding.bottom + 12,
+              bottom: MediaQuery.of(context).padding.bottom + 24,
               top: 12,
               left: 16,
               right: 16,

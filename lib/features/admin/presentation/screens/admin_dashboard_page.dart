@@ -1,8 +1,10 @@
+import 'dart:developer' as dev;
 import 'dart:math';
 
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/extension/theme_extenison.dart';
 import '../../../../core/services/helper.dart';
 import '../../../../generated/locale_keys.g.dart';
 
@@ -67,14 +69,41 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage>
       if (msg != null) GlassySnackbar.showError(context, msg);
     });
 
-    return asyncState.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('${LocaleKeys.error_e.tr()}: $e')),
-      data: (state) => RefreshIndicator(
-        onRefresh: () => ref.read(adminProvider.notifier).refresh(),
-        child: CustomScrollView(
-          slivers: [
-            const SliverToBoxAdapter(child: AdminHeader()),
+    final state = asyncState.value;
+    final hasData = state != null;
+
+    if (asyncState.hasError && !hasData) {
+      dev.log(
+        '🛑 AdminDashboardPage error: ${asyncState.error}',
+        error: asyncState.error,
+        stackTrace: asyncState.stackTrace,
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => ref.read(adminProvider.notifier).refresh(),
+      color: AppColors.teal,
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          const SliverToBoxAdapter(child: AdminHeader()),
+          if (asyncState.isLoading && !hasData)
+            const SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (asyncState.hasError && !hasData)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: Text(
+                  '${LocaleKeys.error_e.tr()}: ${asyncState.error}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.grey),
+                ),
+              ),
+            )
+          else if (hasData) ...[
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -86,7 +115,10 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage>
                         label: LocaleKeys.doctors_count.tr(),
                         count: state.doctorCount,
                         icon: Icons.medical_services_rounded,
-                        gradientColors: const [Color(0xFF2096A4), Color(0xFF1B8A9E)],
+                        gradientColors: const [
+                          Color(0xFF2096A4),
+                          Color(0xFF1B8A9E),
+                        ],
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -96,7 +128,10 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage>
                         label: LocaleKeys.patients_count.tr(),
                         count: state.patientCount,
                         icon: Icons.people_alt_rounded,
-                        gradientColors: const [Color(0xFF4ABCCA), Color(0xFF2096A4)],
+                        gradientColors: const [
+                          Color(0xFF4ABCCA),
+                          Color(0xFF2096A4),
+                        ],
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -106,7 +141,10 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage>
                         label: LocaleKeys.appointments_stat.tr(),
                         count: state.appointmentCount,
                         icon: Icons.calendar_today_rounded,
-                        gradientColors: const [Color(0xFF7BCFCF), Color(0xFF4ABCCA)],
+                        gradientColors: const [
+                          Color(0xFF7BCFCF),
+                          Color(0xFF4ABCCA),
+                        ],
                       ),
                     ),
                   ],
@@ -119,13 +157,16 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage>
                 child: FadeTransition(
                   opacity: _chartCtrl,
                   child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, 0.15),
-                      end: Offset.zero,
-                    ).animate(CurvedAnimation(
-                      parent: _chartCtrl,
-                      curve: Curves.easeOutCubic,
-                    )),
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(0, 0.15),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: _chartCtrl,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
                     child: _AppointmentsChart(appointments: state.appointments),
                   ),
                 ),
@@ -139,14 +180,16 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage>
                     Text(
                       LocaleKeys.all_appointments_title.tr(),
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: AppColors.teal,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        color: AppColors.teal,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.teal.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
@@ -164,26 +207,42 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage>
                 ),
               ),
             ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverList.builder(
-                itemCount: state.appointments.length,
-                itemBuilder: (context, i) {
-                  final appt = state.appointments[i];
-                  return _AnimatedAppointmentCard(
-                    index: i,
-                    appt: appt,
-                    isGlobalLoading: state.isLoading,
-                    onDelete: () => ref
-                        .read(adminProvider.notifier)
-                        .deleteAppointment(appt.id),
-                  );
-                },
+            if (state.appointments.isEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 32,
+                  ),
+                  child: Center(
+                    child: Text(
+                      LocaleKeys.no_appointments_yet.tr(),
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                ),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                sliver: SliverList.builder(
+                  itemCount: state.appointments.length,
+                  itemBuilder: (context, i) {
+                    final appt = state.appointments[i];
+                    return _AnimatedAppointmentCard(
+                      index: i,
+                      appt: appt,
+                      isGlobalLoading: state.isLoading,
+                      onDelete: () => ref
+                          .read(adminProvider.notifier)
+                          .deleteAppointment(appt.id),
+                    );
+                  },
+                ),
               ),
-            ),
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -298,8 +357,10 @@ class _AppointmentsChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final counts = _getWeekdayCounts();
-    final maxVal =
-        counts.values.fold(0, max).clamp(1, double.maxFinite).toInt();
+    final maxVal = counts.values
+        .fold(0, max)
+        .clamp(1, double.maxFinite)
+        .toInt();
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
@@ -331,9 +392,9 @@ class _AppointmentsChart extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 LocaleKeys.appointments_stat.tr(),
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -394,16 +455,17 @@ class _ChartPainter extends CustomPainter {
           const Radius.circular(5),
         ),
         Paint()
-          ..shader = LinearGradient(
-            colors: [
-              AppColors.teal.withValues(alpha: 0.30),
-              AppColors.teal.withValues(alpha: 0.06),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ).createShader(
-            Rect.fromLTWH(x - barWidth * 0.3, top, barWidth * 0.6, barH),
-          )
+          ..shader =
+              LinearGradient(
+                colors: [
+                  AppColors.teal.withValues(alpha: 0.30),
+                  AppColors.teal.withValues(alpha: 0.06),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ).createShader(
+                Rect.fromLTWH(x - barWidth * 0.3, top, barWidth * 0.6, barH),
+              )
           ..style = PaintingStyle.fill,
       );
 
@@ -592,7 +654,9 @@ class _AppointmentCard extends StatelessWidget {
                 Text(
                   appt.patientName,
                   style: const TextStyle(
-                      fontWeight: FontWeight.w700, fontSize: 13),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
                 ),
                 const SizedBox(height: 5),
                 Wrap(
@@ -600,13 +664,18 @@ class _AppointmentCard extends StatelessWidget {
                   runSpacing: 4,
                   children: [
                     _InfoChip(
-                        icon: Icons.person_outline, label: appt.doctorName),
+                      icon: Icons.person_outline,
+                      label: appt.doctorName,
+                    ),
                     _InfoChip(
-                        icon: Icons.event_outlined,
-                        label: '${appt.date}  ${appt.time}'),
+                      icon: Icons.event_outlined,
+                      label: '${appt.date}  ${appt.time}',
+                    ),
                     if (appt.address != null && appt.address!.isNotEmpty)
                       _InfoChip(
-                          icon: Icons.place_outlined, label: appt.address!),
+                        icon: Icons.place_outlined,
+                        label: appt.address!,
+                      ),
                   ],
                 ),
               ],
@@ -654,11 +723,12 @@ class _InfoChip extends StatelessWidget {
         children: [
           Icon(icon, size: 10, color: AppColors.teal),
           const SizedBox(width: 3),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              color: isDark ? Colors.grey[300] : Colors.grey[700],
+          Flexible(
+            child: Text(
+              label,
+              style: context.textTheme.labelSmall?.copyWith(
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
+              ),
             ),
           ),
         ],
